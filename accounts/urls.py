@@ -1,6 +1,6 @@
 from django.urls import path
 from django.http import JsonResponse
-from .views import RegisterView, ProfileView
+from .views import RegisterView, ProfileView, LoginView
 
 def api_root(request):
     return JsonResponse({"message": "Welcome to SkillBridge API!"})
@@ -8,5 +8,6 @@ def api_root(request):
 urlpatterns = [
     path('', api_root, name='api-root'),
     path('register/', RegisterView.as_view(), name='register'),
+    path('login/', LoginView.as_view(), name='login'),
     path('profile/', ProfileView.as_view(), name='profile'),  
 ]
