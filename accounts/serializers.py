@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate
 
 User = get_user_model()
 
@@ -13,10 +13,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             'username',
             'email',
             'password',
+            'full_name',
             'role',
-            'skills',
             'location',
-            'bio',
             'organization_name',
             'organization_description',
             'website_url',
@@ -27,10 +26,9 @@ class RegisterSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data.get('email'),
             password=validated_data['password'],
+            full_name=validated_data.get('full_name'),
             role=validated_data.get('role'),
-            skills=validated_data.get('skills'),
             location=validated_data.get('location'),
-            bio=validated_data.get('bio'),
             organization_name=validated_data.get('organization_name'),
             organization_description=validated_data.get('organization_description'),
             website_url=validated_data.get('website_url'),
@@ -45,12 +43,31 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = [
             'username',
             'email',
+            'full_name',
             'role',
-            'skills',
             'location',
-            'bio',
             'organization_name',
             'organization_description',
             'website_url',
         ]
         read_only_fields = ['username', 'email', 'role']
+
+class LoginSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        username = data.get('username')
+        password = data.get('password')
+
+        if username and password:
+            user = authenticate(username=username, password=password)
+            if not user:
+                raise serializers.ValidationError("Invalid username or password.")
+            if not user.is_active:
+                raise serializers.ValidationError("User is inactive.")
+        else:
+            raise serializers.ValidationError("Must include 'username' and 'password'.")
+
+        data['user'] = user
+        return data
