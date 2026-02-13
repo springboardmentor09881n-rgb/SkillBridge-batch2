@@ -1,8 +1,16 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router-dom";
 import "./ProfileForm.css";
 
 function ProfileForm() {
-  const [role, setRole] = useState("volunteer");
+  const location = useLocation();
+
+  // Role coming from Register page
+  const roleFromRegister = location.state?.role || "Volunteer";
+
+  const [role, setRole] = useState(
+    roleFromRegister === "NGO" ? "ngo" : "volunteer"
+  );
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -24,13 +32,14 @@ function ProfileForm() {
         </select>
 
         <input type="text" placeholder="Location" />
-
         <textarea placeholder="Short Bio"></textarea>
 
+        {/* Volunteer fields */}
         {role === "volunteer" && (
           <input type="text" placeholder="Skills (comma separated)" />
         )}
 
+        {/* NGO fields */}
         {role === "ngo" && (
           <>
             <input type="text" placeholder="Organization Name" />
