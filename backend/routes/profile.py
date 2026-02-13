@@ -1,17 +1,11 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
 from database import profiles_collection
+from schemas.profile_schema import ProfileSchema
 
 router = APIRouter()
 
-# Pydantic model for validation
-class ProfileModel(BaseModel):
-    name: str
-    email: EmailStr
-    age: int  # optional, depends on your use-case
-
 @router.post("/profile")
-async def create_profile(profile: ProfileModel):
+async def create_profile(profile: ProfileSchema):
     # Check if profile exists
     existing_profile = await profiles_collection.find_one({"email": profile.email})
     if existing_profile:
