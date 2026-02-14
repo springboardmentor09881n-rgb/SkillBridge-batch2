@@ -1,16 +1,33 @@
 import React, { useState } from "react";
 import "./Login.css";
+import { Navigate, useNavigate } from "react-router-dom";
 
 const Login = () => {
+  const navigate =useNavigate ()
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("volunteer");
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    // TODO: integrate with backend API for authentication
-    console.log("Login submitted:", { email, password, role });
-  };
+ const handleSubmit = (e) => {
+  e.preventDefault();
+
+  // Save logged-in user
+  localStorage.setItem(
+    "user",
+    JSON.stringify({
+      email,
+      role
+    })
+  );
+
+  // Role-based redirection
+  if (role === "volunteer") {
+    navigate("/profile-volunteer");
+  } else if (role === "ngo") {
+    navigate("/profile-ngo");
+  }
+};
+
 
   return (
     <div className="login-container">
@@ -40,7 +57,7 @@ const Login = () => {
           <option value="ngo">NGO</option>
         </select>
 
-        <button type="submit" className="login-btn">Login</button>
+        <button type="submit" className="login-btn" onClick={handleSubmit}>Login</button>
       </form>
       <p className="register-link">
         Don’t have an account? <a href="/register">Register here</a>
