@@ -10,7 +10,7 @@ const ProfileVolunteer = () => {
     localStorage.removeItem("role");
 
     // Optional: clear everything (use only if you store nothing else)
-    // localStorage.clear();
+    
 
     // Redirect to login page
     navigate("/login");

@@ -42,6 +42,7 @@ const ProfileNGO = () => {
           communities through volunteer-driven programs.
         </p>
       </div>
+ {/* profile card */}
 
       <div className="profile-card">
         <h3>Volunteer Requirements</h3>
