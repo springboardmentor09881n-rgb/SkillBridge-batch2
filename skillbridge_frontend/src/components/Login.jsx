@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "./Login.css";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, Link } from "react-router-dom";
 
 const Login = () => {
-  const navigate =useNavigate ();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("volunteer");
@@ -12,35 +12,61 @@ const Login = () => {
   const validateForm = () => {
     if (!email || !password) {
       setError("Email and password are required");
-      return false; } // Simple email format check
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) { setError("Invalid email format");
+      return false;
+    } // Simple email format check
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Invalid email format");
       return false;
     }
     return true;
   };
 
- const handleSubmit = (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!validateForm()) return;
+    if (!validateForm()) return;
 
-  // Save logged-in user
-  localStorage.setItem(
-    "user",
-    JSON.stringify({
-      email,
-      role
-    })
-  );
+    try {
+      const response = await fetch("http://localhost:8000/api/user/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          email,
+          password
+        })
+      });
 
-  // Role-based redirection
-  if (role === "volunteer") {
-    navigate("/profile-volunteer");
-  } else if (role === "ngo") {
-    navigate("/profile-ngo");
-  }
-};
+      const data = await response.json();
+
+      if (response.ok) {
+        // Save user data and JWT token
+        localStorage.setItem(
+          "user",
+          JSON.stringify({
+            email: data.email,
+            username: data.username,
+            role: data.role,
+            token: data.access_token
+          })
+        );
+
+        // Role-based redirection
+        if (data.role === "Volunteer") {
+          navigate("/profile-volunteer");
+        } else if (data.role === "NGO / Organization") {
+          navigate("/profile-ngo");
+        }
+      } else {
+        setError(data.detail || "Login failed. Please check your credentials.");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      setError("Failed to connect to the server. Please try again.");
+    }
+  };
 
 
   return (
@@ -75,7 +101,7 @@ const Login = () => {
       </form>
       {error && <p style={{ color: "red" }}>{error}</p>}
       <p className="register-link">
-        Don’t have an account? <a href="/register">Register here</a>
+        Don’t have an account? <Link to="/register">Register here</Link>
       </p>
     </div>
   );

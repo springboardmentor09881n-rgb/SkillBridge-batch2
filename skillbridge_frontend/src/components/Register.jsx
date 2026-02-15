@@ -20,7 +20,7 @@ const Register = () => {
     organizationDescription: "",
     website: ""
   });
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
 
   const handleChange = (e) => {
@@ -30,17 +30,42 @@ const Register = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     const payload = {
-      ...formData,
-      role
+      username: formData.username,
+      email: formData.email,
+      password: formData.password,
+      full_name: formData.fullName,
+      role: role,
+      location: formData.location || null,
+      organization_name: formData.organizationName || null,
+      organization_description: formData.organizationDescription || null,
+      website_url: formData.website || null
     };
 
-    console.log(payload);
-    // later: send payload to backend API
-    navigate("/login"); 
+    try {
+      const response = await fetch("http://localhost:8000/api/user/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert("Registration successful! Please login.");
+        navigate("/login");
+      } else {
+        alert(`Registration failed: ${data.detail || "Unknown error"}`);
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Failed to connect to the server. Please try again.");
+    }
   };
 
   return (

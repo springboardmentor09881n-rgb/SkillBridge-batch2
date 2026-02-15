@@ -22,6 +22,8 @@ class UserResponse(BaseModel):
     email: EmailStr
     role: UserRole
     message: str
+    access_token: Optional[str] = None
+    token_type: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: EmailStr
