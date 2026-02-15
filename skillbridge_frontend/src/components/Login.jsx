@@ -3,13 +3,27 @@ import "./Login.css";
 import { Navigate, useNavigate } from "react-router-dom";
 
 const Login = () => {
-  const navigate =useNavigate ()
+  const navigate =useNavigate ();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState("volunteer");
+  const [error, setError] = useState("");
+
+  const validateForm = () => {
+    if (!email || !password) {
+      setError("Email and password are required");
+      return false; } // Simple email format check
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) { setError("Invalid email format");
+      return false;
+    }
+    return true;
+  };
 
  const handleSubmit = (e) => {
   e.preventDefault();
+
+  if (!validateForm()) return;
 
   // Save logged-in user
   localStorage.setItem(
@@ -57,8 +71,9 @@ const Login = () => {
           <option value="ngo">NGO</option>
         </select>
 
-        <button type="submit" className="login-btn" onClick={handleSubmit}>Login</button>
+        <button type="submit" className="login-btn" >Login</button>
       </form>
+      {error && <p style={{ color: "red" }}>{error}</p>}
       <p className="register-link">
         Don’t have an account? <a href="/register">Register here</a>
       </p>
