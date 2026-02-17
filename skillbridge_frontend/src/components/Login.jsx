@@ -1,12 +1,12 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "./Login.css";
-import { Navigate, useNavigate, Link } from "react-router-dom";
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("volunteer");
+  const [role, setRole] = useState("Volunteer");
   const [error, setError] = useState("");
 
   const validateForm = () => {
@@ -35,7 +35,8 @@ const Login = () => {
         },
         body: JSON.stringify({
           email,
-          password
+          password,
+          role
         })
       });
 
@@ -56,7 +57,7 @@ const Login = () => {
         // Role-based redirection
         if (data.role === "Volunteer") {
           navigate("/profile-volunteer");
-        } else if (data.role === "NGO / Organization") {
+        } else if (data.role === "NGO") {
           navigate("/profile-ngo");
         }
       } else {
@@ -93,8 +94,8 @@ const Login = () => {
 
         <label>Role</label>
         <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="volunteer">Volunteer</option>
-          <option value="ngo">NGO</option>
+          <option value="Volunteer">Volunteer</option>
+          <option value="NGO">NGO / Organization</option>
         </select>
 
         <button type="submit" className="login-btn" >Login</button>
