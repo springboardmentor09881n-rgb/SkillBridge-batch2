@@ -1,0 +1,35 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.env
+venv/
+.venv/
+*.log
+.pytest_cache/
+.mypy_cache/
+.coverage
+
+# =========================
+# Node / Vite
+# =========================
+node_modules/
+dist/
+.vite/
+coverage/
+*.local
+
+# =========================
+# OS Files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE
+# =========================
+.vscode/
+.idea/

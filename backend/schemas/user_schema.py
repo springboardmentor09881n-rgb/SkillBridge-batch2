@@ -4,7 +4,7 @@ from enum import Enum
 
 class UserRole(str, Enum):
     VOLUNTEER = "Volunteer"
-    NGO = "NGO / Organization"
+    NGO = "NGO"
 
 class UserRegister(BaseModel):
     username: str
