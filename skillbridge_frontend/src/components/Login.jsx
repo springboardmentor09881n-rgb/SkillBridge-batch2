@@ -56,7 +56,7 @@ const Login = () => {
         // Role-based redirection
         if (data.role === "Volunteer") {
           navigate("/profile-volunteer");
-        } else if (data.role === "NGO / Organization") {
+        } else if (data.role === "NGO") {
           navigate("/profile-ngo");
         }
       } else {

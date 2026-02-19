@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 import Login from "./components/Login";
 import Register from "./components/Register";
-import ProfileNGO from "./components/ProfileNgo";
+import ProfileNGO from "./components/ProfileNGO";
 import ProfileVolunteer from "./components/ProfileVolunteer";
 
 const App = () => {

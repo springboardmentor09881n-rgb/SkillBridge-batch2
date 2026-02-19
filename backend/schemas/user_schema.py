@@ -13,6 +13,7 @@ class UserRegister(BaseModel):
     full_name: Optional[str] = None
     role: UserRole
     location: Optional[str] = None
+    skills: Optional[str] = None
     organization_name: Optional[str] = None
     organization_description: Optional[str] = None
     website_url: Optional[str] = None
