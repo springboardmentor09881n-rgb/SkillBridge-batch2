@@ -13,6 +13,9 @@ venv/
 .mypy_cache/
 .coverage
 
+__pycache__/
+*.pyc
+
 # =========================
 # Node / Vite
 # =========================
