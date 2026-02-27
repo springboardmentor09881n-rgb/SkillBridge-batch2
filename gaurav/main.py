@@ -4,7 +4,7 @@ from routes.profile import router as profile_router
 
 app = FastAPI(title="SkillBridge Backend")
 
-# Include routers
+
 app.include_router(user_router, prefix="/api/user", tags=["User"])
 app.include_router(profile_router, prefix="/api/profile", tags=["Profile"])
 
