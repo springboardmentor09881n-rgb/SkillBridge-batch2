@@ -40,6 +40,7 @@ const Register = () => {
       full_name: formData.fullName,
       role: role,
       location: formData.location || null,
+      skills: formData.skills || null,
       organization_name: formData.organizationName || null,
       organization_description: formData.organizationDescription || null,
       website_url: formData.website || null
