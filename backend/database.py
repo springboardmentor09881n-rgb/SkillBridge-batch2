@@ -9,5 +9,4 @@ db = client["milestone_db"]
 
 users_collection = db["users"]
 profiles_collection = db["profiles"]
-# collection for opportunity documents
 opportunities_collection = db["opportunities"]

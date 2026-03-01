@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import "./Login.css";
 
 const Login = () => {
@@ -22,6 +23,8 @@ const Login = () => {
     return true;
   };
 
+  const { login } = useContext(AuthContext);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -43,22 +46,14 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // Save user data and JWT token
-        localStorage.setItem(
-          "user",
-          JSON.stringify({
-            email: data.email,
-            username: data.username,
-            role: data.role,
-            token: data.access_token
-          })
-        );
+        // use context login
+        login(data);
 
         // Role-based redirection
         if (data.role === "Volunteer") {
-          navigate("/profile-volunteer");
+          navigate("/volunteer-dashboard");
         } else if (data.role === "NGO") {
-          navigate("/profile-ngo");
+          navigate("/ngo-dashboard");
         }
       } else {
         setError(data.detail || "Login failed. Please check your credentials.");

@@ -1,30 +1,13 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, EmailStr
-from typing import Optional
+from fastapi import APIRouter, Depends, HTTPException
 from database import profiles_collection, users_collection
+from schemas.profile_schema import ProfileSchema, VolunteerProfileUpdate, NGOProfileUpdate
+from auth.dependencies import get_current_user
 
 router = APIRouter()
 
-class ProfileModel(BaseModel):
-    name: str
-    email: EmailStr
-    age: int
-
-
-class ProfileUpdateModel(BaseModel):
-    name: Optional[str] = None
-    age: Optional[int] = None
-
-@router.post("/profile")
-async def create_profile(profile: ProfileModel):
-
-    current_user = await users_collection.find_one({"email": profile.email})
-    if not current_user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if current_user["role"] not in ["volunteer", "ngo"]:
-        raise HTTPException(status_code=403, detail="Invalid role")
-
+@router.post("/")
+async def create_profile(profile: ProfileSchema):
+    # Check if profile exists
     existing_profile = await profiles_collection.find_one({"email": profile.email})
     if existing_profile:
         raise HTTPException(status_code=400, detail="Profile already exists")
@@ -33,29 +16,43 @@ async def create_profile(profile: ProfileModel):
 
     return {"message": "Profile created successfully"}
 
-@router.put("/profile/{email}")
-async def update_profile(email: str, profile: ProfileUpdateModel):
-    current_user = await users_collection.find_one({"email": email})
-    if not current_user:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    if current_user["role"] not in ["volunteer", "ngo"]:
-        raise HTTPException(status_code=403, detail="Invalid role")
-
-    existing_profile = await profiles_collection.find_one({"email": email})
-    if not existing_profile:
-        raise HTTPException(status_code=404, detail="Profile not found")
-    update_data = {
-        key: value
-        for key, value in profile.dict().items()
-        if value is not None
-    }
-
+@router.put("/volunteer")
+async def update_volunteer_profile(profile_update: VolunteerProfileUpdate, user: dict = Depends(get_current_user)):
+    if user["role"] != "Volunteer":
+        raise HTTPException(status_code=403, detail="Only volunteers can update this profile")
+    
+    update_data = {k: v for k, v in profile_update.dict().items() if v is not None}
+    
     if not update_data:
-        raise HTTPException(status_code=400, detail="No data provided to update")
-    await profiles_collection.update_one(
-        {"email": email},
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    result = await users_collection.update_one(
+        {"email": user["user_id"]},
         {"$set": update_data}
     )
 
-    return {"message": "Profile updated successfully"}
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Volunteer not found")
+
+    return {"message": "Volunteer profile updated successfully"}
+
+
+@router.put("/ngo")
+async def update_ngo_profile(profile_update: NGOProfileUpdate, user: dict = Depends(get_current_user)):
+    if user["role"] != "NGO":
+        raise HTTPException(status_code=403, detail="Only NGOs can update this profile")
+    
+    update_data = {k: v for k, v in profile_update.dict().items() if v is not None}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No fields to update")
+
+    result = await users_collection.update_one(
+        {"email": user["user_id"]},
+        {"$set": update_data}
+    )
+
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="NGO not found")
+
+    return {"message": "NGO profile updated successfully"}
