@@ -21,6 +21,15 @@ const Sidebar = () => {
                             <Link to="/volunteer-dashboard" style={{ textDecoration: "none", color: "#333", fontWeight: "bold" }}>Dashboard</Link>
                         </li>
                         <li style={{ marginBottom: "15px" }}>
+                            <Link to="/volunteer-opportunities" style={{ textDecoration: "none", color: "#333", fontWeight: "bold" }}>Opportunities</Link>
+                        </li>
+                        <li style={{ marginBottom: "15px" }}>
+                            <Link to="/volunteer-applications" style={{ textDecoration: "none", color: "#333", fontWeight: "bold" }}>Applications</Link>
+                        </li>
+                        <li style={{ marginBottom: "15px" }}>
+                            <Link to="/volunteer-messages" style={{ textDecoration: "none", color: "#333", fontWeight: "bold" }}>Messages</Link>
+                        </li>
+                        <li style={{ marginBottom: "15px" }}>
                             <Link to="/edit-profile-volunteer" style={{ textDecoration: "none", color: "#333", fontWeight: "bold" }}>Edit Profile</Link>
                         </li>
                     </>

@@ -1,0 +1,93 @@
+import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import apiFetch from "../services/api";
+
+const VolunteerApplications = () => {
+    const [applications, setApplications] = useState([]);
+    const [opportunities, setOpportunities] = useState({});
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [apps, oppsList] = await Promise.all([
+                    apiFetch("/applications/volunteer", { method: "GET" }).catch(() => []),
+                    apiFetch("/opportunities", { method: "GET" }).catch(() => [])
+                ]);
+                setApplications(Array.isArray(apps) ? apps : []);
+                const oppMap = {};
+                (Array.isArray(oppsList) ? oppsList : []).forEach(o => { oppMap[o._id] = o; });
+                setOpportunities(oppMap);
+            } catch (err) {
+                console.error(err);
+                setApplications([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    return (
+        <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", fontFamily: "system-ui, sans-serif" }}>
+            <Sidebar />
+            <div style={{ flex: 1, padding: "32px" }}>
+                <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1a1a1a", marginBottom: "8px" }}>Your Applications</h2>
+                <p style={{ fontSize: "16px", color: "#6b7280", marginBottom: "24px" }}>Track the status of your volunteering applications.</p>
+
+                {loading ? (
+                    <p>Loading...</p>
+                ) : applications.length === 0 ? (
+                    <div style={{ background: "white", borderRadius: "12px", padding: "48px", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
+                        <p style={{ color: "#6b7280", fontSize: "16px", marginBottom: "16px" }}>You haven't applied to any opportunities yet.</p>
+                        <Link to="/volunteer-opportunities" style={{
+                            display: "inline-block",
+                            padding: "12px 24px",
+                            background: "#2563eb",
+                            color: "white",
+                            borderRadius: "8px",
+                            fontWeight: "600",
+                            textDecoration: "none"
+                        }}>Browse Opportunities</Link>
+                    </div>
+                ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                        {applications.map(app => {
+                            const opp = opportunities[app.opportunity_id];
+                            return (
+                                <div key={app._id} style={{
+                                    background: "white",
+                                    borderRadius: "12px",
+                                    padding: "24px",
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
+                                }}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                                        <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#1a1a1a", margin: 0 }}>
+                                            {opp?.title || "Opportunity"}
+                                        </h3>
+                                        <span style={{
+                                            background: app.status === "accepted" ? "#dcfce7" : app.status === "pending" ? "#fef3c7" : "#fee2e2",
+                                            color: app.status === "accepted" ? "#16a34a" : app.status === "pending" ? "#d97706" : "#dc2626",
+                                            padding: "6px 12px",
+                                            borderRadius: "20px",
+                                            fontSize: "13px",
+                                            fontWeight: "500"
+                                        }}>{app.status}</span>
+                                    </div>
+                                    {opp && (
+                                        <Link to={`/opportunity/${app.opportunity_id}`} style={{ color: "#2563eb", fontSize: "14px", marginTop: "8px", display: "inline-block" }}>
+                                            View opportunity details
+                                        </Link>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+export default VolunteerApplications;
