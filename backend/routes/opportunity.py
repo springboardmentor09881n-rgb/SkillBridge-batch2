@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from database import opportunities_collection
+from database import opportunities_collection, notifications_collection
 from schemas.opportunity import OpportunityCreate, OpportunityUpdate, OpportunityDB
 from auth.dependencies import get_current_user
 from bson import ObjectId
@@ -22,6 +22,17 @@ async def create_opportunity(opportunity: OpportunityCreate, user: dict = Depend
     created_opp = await opportunities_collection.find_one({"_id": result.inserted_id})
     created_opp["_id"] = str(created_opp["_id"])
     
+    # Create notification for volunteers
+    await notifications_collection.insert_one({
+        "type": "new_opportunity",
+        "message": f"New Opportunity: {opportunity.title}",
+        "opportunity_id": str(result.inserted_id),
+        "ngo_id": user["user_id"],
+        "role": "Volunteer",
+        "read_by": [],
+        "created_at": datetime.utcnow()
+    })
+
     return {"message": "Opportunity created successfully", "opportunity": created_opp}
 
 @router.get("/ngo")
@@ -38,13 +49,27 @@ async def get_ngo_opportunities(user: dict = Depends(get_current_user)):
 
 @router.get("/")
 async def get_all_opportunities():
-    # Will be used later for browsing
-    cursor = opportunities_collection.find({"status": "Open"})
+    # Returns all opportunities for volunteer browsing
+    cursor = opportunities_collection.find()
     opportunities = await cursor.to_list(length=100)
     for opp in opportunities:
         opp["_id"] = str(opp["_id"])
         
     return opportunities
+
+@router.get("/{opportunity_id}")
+async def get_opportunity_by_id(opportunity_id: str):
+    try:
+        obj_id = ObjectId(opportunity_id)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Invalid Opportunity ID")
+
+    opp = await opportunities_collection.find_one({"_id": obj_id})
+    if not opp:
+        raise HTTPException(status_code=404, detail="Opportunity not found")
+
+    opp["_id"] = str(opp["_id"])
+    return opp
 
 @router.put("/{opportunity_id}")
 async def update_opportunity(opportunity_id: str, opportunity_update: OpportunityUpdate, user: dict = Depends(get_current_user)):
@@ -72,6 +97,21 @@ async def update_opportunity(opportunity_id: str, opportunity_update: Opportunit
         {"_id": obj_id},
         {"$set": update_data}
     )
+
+    # Notify volunteers if status actually changed
+    if "status" in update_data and update_data["status"] != existing_opp.get("status"):
+        new_status = update_data["status"]
+        title = existing_opp.get("title", "an opportunity")
+        msg = f"Opportunity {new_status}: {title}"
+        await notifications_collection.insert_one({
+            "type": "status_change",
+            "message": msg,
+            "opportunity_id": opportunity_id,
+            "ngo_id": user["user_id"],
+            "role": "Volunteer",
+            "read_by": [],
+            "created_at": datetime.utcnow()
+        })
 
     return {"message": "Opportunity updated successfully"}
 

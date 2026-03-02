@@ -1,6 +1,7 @@
-import { Bell, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
 
@@ -34,7 +35,7 @@ const VolunteerMessages = () => {
                         <Link to="/volunteer-messages" style={{ textDecoration: "none", color: "#374151", fontWeight: "600", fontSize: "15px" }}>Messages</Link>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "8px", paddingLeft: "20px", borderLeft: "1.5px solid #e5e7eb" }}>
                             <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: "12px", fontWeight: "600", padding: "4px 12px", borderRadius: "9999px", letterSpacing: "0.025em", lineHeight: "1" }}>Volunteer</span>
-                            <Bell size={20} color="#9ca3af" style={{ cursor: "pointer" }} />
+                            <NotificationBell />
                             <div style={{
                                 width: "36px", height: "36px", borderRadius: "50%",
                                 background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "#e5e7eb",

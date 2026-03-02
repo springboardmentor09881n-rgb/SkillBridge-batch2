@@ -1,6 +1,7 @@
-import { Bell, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
 
@@ -90,7 +91,7 @@ const VolunteerDashboard = () => {
                         <Link to="/volunteer-messages" style={{ textDecoration: "none", color: "#6b7280", fontWeight: "500", fontSize: "15px" }}>Messages</Link>
                         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "8px", paddingLeft: "20px", borderLeft: "1.5px solid #e5e7eb" }}>
                             <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: "12px", fontWeight: "600", padding: "4px 12px", borderRadius: "9999px", letterSpacing: "0.025em", lineHeight: "1" }}>Volunteer</span>
-                            <Bell size={20} color="#9ca3af" style={{ cursor: "pointer" }} />
+                            <NotificationBell />
                             <div style={{
                                 width: "36px",
                                 height: "36px",
@@ -215,7 +216,7 @@ const VolunteerDashboard = () => {
                                                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                                                     <h4 style={{ margin: 0, fontSize: "16px", fontWeight: "600", color: "#374151" }}>{opp.title}</h4>
                                                     <span style={{
-                                                        background: "#16a34a",
+                                                        background: opp.status === "Closed" ? "#dc2626" : "#16a34a",
                                                         color: "white",
                                                         padding: "5px 14px",
                                                         borderRadius: "20px",
@@ -224,7 +225,7 @@ const VolunteerDashboard = () => {
                                                         flexShrink: 0
                                                     }}>{opp.status || "Open"}</span>
                                                 </div>
-                                                <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "10px" }}>NGO ID: {opp.ngo_id && !String(opp.ngo_id).includes("@") ? opp.ngo_id : "2"}</p>
+                                                <p style={{ fontSize: "13px", color: "#6b7280", marginBottom: "10px" }}>NGO ID: {opp.ngo_id}</p>
                                                 <p style={{ fontSize: "14px", color: "#4b5563", marginBottom: "12px", lineHeight: 1.6 }}>{opp.description}</p>
                                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "10px" }}>
                                                     {opp.required_skills?.map(skill => (

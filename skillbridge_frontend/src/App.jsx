@@ -1,25 +1,25 @@
-import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
+import { Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { AuthProvider } from "./context/AuthContext";
 
 import Login from "./components/Login";
-import Register from "./components/Register";
 import ProfileNGO from "./components/ProfileNGO";
 import ProfileVolunteer from "./components/ProfileVolunteer";
+import Register from "./components/Register";
 
-import VolunteerDashboard from "./pages/VolunteerDashboard";
-import NGODashboard from "./pages/NGODashboard";
-import EditProfileVolunteer from "./pages/EditProfileVolunteer";
-import EditProfileNGO from "./pages/EditProfileNGO";
-import CreateOpportunity from "./pages/CreateOpportunity";
-import ManageOpportunities from "./pages/ManageOpportunities";
-import LandingPage from "./pages/LandingPage";
-import VolunteerOpportunities from "./pages/VolunteerOpportunities";
-import VolunteerApplications from "./pages/VolunteerApplications";
-import VolunteerMessages from "./pages/VolunteerMessages";
-import OpportunityDetail from "./pages/OpportunityDetail";
 import CreateNewOpportunity from "./pages/CreateNewopportunity";
+import CreateOpportunity from "./pages/CreateOpportunity";
+import EditOpportunity from "./pages/EditOpportunity";
+import EditProfileNGO from "./pages/EditProfileNGO";
+import EditProfileVolunteer from "./pages/EditProfileVolunteer";
+import LandingPage from "./pages/LandingPage";
+import ManageOpportunities from "./pages/ManageOpportunities";
+import NGODashboard from "./pages/NGODashboard";
+import OpportunityDetail from "./pages/OpportunityDetail";
+import VolunteerApplications from "./pages/VolunteerApplications";
+import VolunteerDashboard from "./pages/VolunteerDashboard";
+import VolunteerMessages from "./pages/VolunteerMessages";
+import VolunteerOpportunities from "./pages/VolunteerOpportunities";
 
 
 const App = () => {
@@ -76,6 +76,10 @@ const App = () => {
           <Route
             path="/manage-opportunities"
             element={<ProtectedRoute allowedRoles={["NGO"]}><ManageOpportunities /></ProtectedRoute>}
+          />
+          <Route
+            path="/edit-opportunity/:id"
+            element={<ProtectedRoute allowedRoles={["NGO"]}><EditOpportunity /></ProtectedRoute>}
           />
 
           {/* Protected Routes - CreateNewopportunity*/}

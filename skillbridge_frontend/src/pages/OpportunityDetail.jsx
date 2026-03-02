@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
-import apiFetch from "../services/api";
 import { useAuth } from "../context/AuthContext";
+import apiFetch from "../services/api";
 
 const OpportunityDetail = () => {
     const { id } = useParams();
@@ -67,7 +67,7 @@ const OpportunityDetail = () => {
                 <Sidebar />
                 <div style={{ flex: 1, padding: "40px" }}>
                     <p style={{ color: "#e74c3c" }}>Opportunity not found.</p>
-                    <Link to="/volunteer-opportunities">Back to Opportunities</Link>
+                    <Link to={user?.role === "NGO" ? "/manage-opportunities" : "/volunteer-opportunities"}>Back to Opportunities</Link>
                 </div>
             </div>
         );
@@ -77,7 +77,7 @@ const OpportunityDetail = () => {
         <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", fontFamily: "system-ui, sans-serif" }}>
             <Sidebar />
             <div style={{ flex: 1, padding: "32px" }}>
-                <Link to="/volunteer-opportunities" style={{ display: "inline-block", marginBottom: "24px", color: "#2563eb", textDecoration: "none", fontWeight: "500" }}>
+                <Link to={user?.role === "NGO" ? "/manage-opportunities" : "/volunteer-opportunities"} style={{ display: "inline-block", marginBottom: "24px", color: "#2563eb", textDecoration: "none", fontWeight: "500" }}>
                     ← Back to Opportunities
                 </Link>
 

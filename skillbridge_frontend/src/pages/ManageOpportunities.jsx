@@ -144,15 +144,12 @@ const ManageOpportunities = () => {
                                         <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#111827", margin: "0 0 4px 0" }}>{opp.title}</h3>
                                         <p style={{ color: "#9ca3af", fontSize: "13px", margin: 0 }}>NGO ID: {opp.ngo_id}</p>
                                     </div>
-                                    <span
-                                        onClick={() => toggleStatus(opp)}
-                                        title={`Click to mark as ${opp.status === "Open" ? "Closed" : "Open"}`}
-                                        style={{
+                                    <span style={{
                                             background: opp.status === "Open" ? "#f0fdf4" : "#fef2f2",
                                             color: opp.status === "Open" ? "#16a34a" : "#dc2626",
                                             border: `1px solid ${opp.status === "Open" ? "#bbf7d0" : "#fecaca"}`,
                                             padding: "4px 14px", borderRadius: "9999px", fontSize: "13px",
-                                            fontWeight: "500", cursor: "pointer"
+                                            fontWeight: "500"
                                         }}>
                                         {opp.status}
                                     </span>
@@ -203,7 +200,7 @@ const ManageOpportunities = () => {
                                         View details &gt;
                                     </Link>
                                     <div style={{ display: "flex", gap: "8px" }}>
-                                        <Link to={`/opportunity/${opp._id}`} style={{
+                                        <Link to={`/edit-opportunity/${opp._id}`} style={{
                                             border: "1px solid #e5e7eb", padding: "6px 20px", borderRadius: "6px",
                                             background: "white", fontSize: "14px", color: "#374151", textDecoration: "none"
                                         }}>
