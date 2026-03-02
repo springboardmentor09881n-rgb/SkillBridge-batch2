@@ -91,3 +91,23 @@ async def upload_photo(file: UploadFile = File(...), user: dict = Depends(get_cu
     )
 
     return {"photo_url": photo_url}
+
+
+@router.delete("/remove-photo")
+async def remove_photo(user: dict = Depends(get_current_user)):
+    user_doc = await users_collection.find_one({"email": user["user_id"]})
+    if not user_doc:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    photo_url = user_doc.get("photo_url")
+    if photo_url:
+        old_file = os.path.join(os.path.dirname(UPLOAD_DIR), photo_url.lstrip("/"))
+        if os.path.exists(old_file):
+            os.remove(old_file)
+
+    await users_collection.update_one(
+        {"email": user["user_id"]},
+        {"$set": {"photo_url": ""}}
+    )
+
+    return {"message": "Photo removed successfully"}

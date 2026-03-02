@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
 
@@ -13,6 +13,8 @@ const EditProfileVolunteer = () => {
     const [message, setMessage] = useState("");
     const [photoUrl, setPhotoUrl] = useState("");
     const [photoPreview, setPhotoPreview] = useState("");
+    const [pendingPhotoFile, setPendingPhotoFile] = useState(null);
+    const [pendingPhotoRemove, setPendingPhotoRemove] = useState(false);
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef(null);
 
@@ -40,39 +42,51 @@ const EditProfileVolunteer = () => {
 
     const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
-    const handlePhotoSelect = async (e) => {
+    const handlePhotoSelect = (e) => {
         const file = e.target.files[0];
         if (!file) return;
         const reader = new FileReader();
         reader.onload = (ev) => setPhotoPreview(ev.target.result);
         reader.readAsDataURL(file);
-        setUploading(true);
-        try {
-            const token = localStorage.getItem("access_token");
-            const fd = new FormData();
-            fd.append("file", file);
-            const res = await fetch("http://localhost:8000/api/profile/upload-photo", {
-                method: "POST",
-                headers: { Authorization: `Bearer ${token}` },
-                body: fd
-            });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || "Upload failed");
-            setPhotoUrl(`http://localhost:8000${data.photo_url}`);
-            setPhotoPreview("");
-            setMessage("Photo uploaded successfully!");
-        } catch (err) {
-            setMessage("Photo upload failed: " + err.message);
-            setPhotoPreview("");
-        } finally {
-            setUploading(false);
-        }
+        setPendingPhotoFile(file);
+        setPendingPhotoRemove(false);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage("");
+        setUploading(true);
         try {
+            const token = localStorage.getItem("access_token");
+
+            // Handle photo upload if a new file was selected
+            if (pendingPhotoFile) {
+                const fd = new FormData();
+                fd.append("file", pendingPhotoFile);
+                const res = await fetch("http://localhost:8000/api/profile/upload-photo", {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${token}` },
+                    body: fd
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.detail || "Photo upload failed");
+                setPhotoUrl(`http://localhost:8000${data.photo_url}`);
+                setPhotoPreview("");
+                setPendingPhotoFile(null);
+            }
+
+            // Handle photo removal
+            if (pendingPhotoRemove) {
+                const res = await fetch("http://localhost:8000/api/profile/remove-photo", {
+                    method: "DELETE",
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                if (!res.ok) throw new Error("Failed to remove photo");
+                setPhotoUrl("");
+                setPendingPhotoRemove(false);
+            }
+
+            // Save profile data
             const payload = {
                 ...formData,
                 skills: formData.skills.split(",").map(skill => skill.trim()).filter(Boolean)
@@ -85,6 +99,8 @@ const EditProfileVolunteer = () => {
             setMessage("Profile Updated Successfully!");
         } catch (error) {
             setMessage("Failed to update profile: " + error.message);
+        } finally {
+            setUploading(false);
         }
     };
 
@@ -104,13 +120,13 @@ const EditProfileVolunteer = () => {
                             onClick={() => fileInputRef.current?.click()}
                             style={{
                                 width: "100px", height: "100px", borderRadius: "50%",
-                                background: (photoPreview || photoUrl) ? `url(${photoPreview || photoUrl}) center/cover no-repeat` : "#e5e7eb",
+                                background: (photoPreview || (photoUrl && !pendingPhotoRemove)) ? `url(${photoPreview || photoUrl}) center/cover no-repeat` : "#e5e7eb",
                                 margin: "0 auto 10px", cursor: "pointer",
                                 display: "flex", alignItems: "center", justifyContent: "center",
                                 border: "3px solid #2563eb", position: "relative"
                             }}
                         >
-                            {!(photoPreview || photoUrl) && <span style={{ fontSize: "32px", color: "#9ca3af" }}>📷</span>}
+                            {!(photoPreview || (photoUrl && !pendingPhotoRemove)) && <span style={{ fontSize: "32px", color: "#9ca3af" }}>📷</span>}
                             {uploading && (
                                 <div style={{
                                     position: "absolute", inset: 0, borderRadius: "50%",
@@ -122,6 +138,19 @@ const EditProfileVolunteer = () => {
                         </div>
                         <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} style={{ display: "none" }} />
                         <p style={{ fontSize: "13px", color: "#6b7280", margin: 0 }}>Click to upload photo</p>
+                        {(photoPreview || photoUrl) && !pendingPhotoRemove && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    setPendingPhotoRemove(true);
+                                    setPendingPhotoFile(null);
+                                    setPhotoPreview("");
+                                }}
+                                style={{ background: "none", border: "none", color: "#ef4444", cursor: "pointer", fontSize: "13px", marginTop: "6px" }}
+                            >
+                                Remove photo
+                            </button>
+                        )}
                     </div>
                     <div style={{ marginBottom: "15px" }}>
                         <label>Full Name</label>
@@ -140,8 +169,8 @@ const EditProfileVolunteer = () => {
                         <input type="text" name="skills" value={formData.skills} onChange={handleChange} style={{ width: "100%", padding: "8px", marginTop: "5px", borderRadius: "4px", border: "1px solid #ccc" }} placeholder="e.g. React, Python, Cooking" />
                     </div>
 
-                    <button type="submit" style={{ padding: "10px 20px", background: "#f39c12", color: "white", border: "none", borderRadius: "5px", cursor: "pointer", fontWeight: "bold", width: "100%" }}>
-                        Save Changes
+                    <button type="submit" disabled={uploading} style={{ padding: "10px 20px", background: uploading ? "#d4a017" : "#f39c12", color: "white", border: "none", borderRadius: "5px", cursor: uploading ? "not-allowed" : "pointer", fontWeight: "bold", width: "100%" }}>
+                        {uploading ? "Saving..." : "Save Changes"}
                     </button>
                 </form>
             </div>

@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
+import { Bell, User } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
-import { Bell, User } from "lucide-react";
 
 const VolunteerDashboard = () => {
     const [profile, setProfile] = useState(null);
@@ -88,8 +88,8 @@ const VolunteerDashboard = () => {
                         <Link to="/volunteer-dashboard" style={{ textDecoration: "none", color: "#374151", fontWeight: "600", fontSize: "15px" }}>Dashboard</Link>
                         <Link to="/volunteer-opportunities" style={{ textDecoration: "none", color: "#6b7280", fontWeight: "500", fontSize: "15px" }}>Opportunities</Link>
                         <Link to="/volunteer-messages" style={{ textDecoration: "none", color: "#6b7280", fontWeight: "500", fontSize: "15px" }}>Messages</Link>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                            <span style={{ color: "#9ca3af", fontSize: "14px", fontWeight: "500" }}>Volunteer</span>
+                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "8px", paddingLeft: "20px", borderLeft: "1.5px solid #e5e7eb" }}>
+                            <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: "12px", fontWeight: "600", padding: "4px 12px", borderRadius: "9999px", letterSpacing: "0.025em", lineHeight: "1" }}>Volunteer</span>
                             <Bell size={20} color="#9ca3af" style={{ cursor: "pointer" }} />
                             <div style={{
                                 width: "36px",
@@ -124,8 +124,13 @@ const VolunteerDashboard = () => {
                                 borderRadius: "50%",
                                 background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "#e5e7eb",
                                 flexShrink: 0,
-                                overflow: "hidden"
-                            }} />
+                                overflow: "hidden",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center"
+                            }}>
+                                {!profilePhoto && <User size={24} color="#9ca3af" />}
+                            </div>
                             <div>
                                 <h3 style={{ margin: "0 0 2px", fontSize: "16px", fontWeight: "600", color: "#374151" }}>{volunteerName}</h3>
                                 <span style={{ fontSize: "13px", color: "#9ca3af" }}>Volunteer</span>
