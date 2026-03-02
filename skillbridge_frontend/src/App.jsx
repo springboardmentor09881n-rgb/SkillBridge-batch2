@@ -19,6 +19,8 @@ import VolunteerOpportunities from "./pages/VolunteerOpportunities";
 import VolunteerApplications from "./pages/VolunteerApplications";
 import VolunteerMessages from "./pages/VolunteerMessages";
 import OpportunityDetail from "./pages/OpportunityDetail";
+import CreateNewOpportunity from "./pages/CreateNewopportunity";
+
 
 const App = () => {
   return (
@@ -75,6 +77,13 @@ const App = () => {
             path="/manage-opportunities"
             element={<ProtectedRoute allowedRoles={["NGO"]}><ManageOpportunities /></ProtectedRoute>}
           />
+
+          {/* Protected Routes - CreateNewopportunity*/}
+          <Route
+            path="/create-new-opportunity"
+            element={<CreateNewOpportunity />}
+          />
+
         </Routes>
       </Router>
     </AuthProvider>
