@@ -100,10 +100,10 @@ const EditProfileNGO = () => {
     if (loading) return <div>Loading...</div>;
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa" }}>
+        <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", fontFamily: "system-ui, sans-serif" }}>
             <Sidebar />
-            <div style={{ flex: 1, padding: "40px", fontFamily: "Arial, sans-serif" }}>
-                <h2>Edit NGO Profile</h2>
+            <div style={{ flex: 1, padding: "40px" }}>
+                <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1a1a1a", marginBottom: "8px" }}>Edit NGO Profile</h2>
                 {message && <p style={{ color: message.includes("Failed") || message.includes("failed") ? "red" : "green", fontWeight: "bold" }}>{message}</p>}
 
                 <form onSubmit={handleSubmit} style={{ background: "white", padding: "30px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", maxWidth: "500px" }}>

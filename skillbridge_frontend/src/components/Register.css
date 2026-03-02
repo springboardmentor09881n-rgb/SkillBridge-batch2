@@ -122,7 +122,14 @@ body {
   color: #4b5563;
 }
 
-.register-card .login-text span {
+.register-card .login-text span,
+.register-card .login-text a {
   color: #2563eb;
   cursor: pointer;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.register-card .login-text a:hover {
+  text-decoration: underline;
 }
