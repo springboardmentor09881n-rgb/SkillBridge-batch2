@@ -15,11 +15,12 @@ async def get_volunteer_dashboard(user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="Volunteer not found")
         
     return {
-        "name": volunteer_data.get("full_name", volunteer_data.get("username", "")),
+        "name": volunteer_data.get("name", volunteer_data.get("full_name", volunteer_data.get("username", ""))),
         "email": volunteer_data.get("email"),
         "skills": volunteer_data.get("skills", []),
         "bio": volunteer_data.get("bio", ""),
-        "location": volunteer_data.get("location", "")
+        "location": volunteer_data.get("location", ""),
+        "photo_url": volunteer_data.get("photo_url", "")
     }
 
 @router.get("/ngo")
@@ -44,5 +45,6 @@ async def get_ngo_dashboard(user: dict = Depends(get_current_user)):
         "organization_description": ngo_data.get("organization_description", ""),
         "website_url": ngo_data.get("website_url", ""),
         "total_opportunities_posted": total_posted,
-        "active_opportunities": active_posted
+        "active_opportunities": active_posted,
+        "photo_url": ngo_data.get("photo_url", "")
     }

@@ -36,3 +36,8 @@ Thumbs.db
 # =========================
 .vscode/
 .idea/
+
+# =========================
+# Uploads (user-uploaded files)
+# =========================
+backend/uploads/

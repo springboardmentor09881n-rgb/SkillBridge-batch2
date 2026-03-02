@@ -29,7 +29,14 @@ const NGODashboard = () => {
         <div style={{ display: "flex", height: "100vh" }}>
             <Sidebar />
             <div style={{ flex: 1, padding: "40px", fontFamily: "Arial, sans-serif", background: "#f5f7fa" }}>
-                <h1>Welcome, {data.organization_name}</h1>
+                <div style={{ display: "flex", alignItems: "center", gap: "16px", marginBottom: "10px" }}>
+                    {data.photo_url ? (
+                        <img src={`http://localhost:8000${data.photo_url}`} alt="Profile" style={{ width: "60px", height: "60px", borderRadius: "50%", objectFit: "cover" }} />
+                    ) : (
+                        <div style={{ width: "60px", height: "60px", borderRadius: "50%", background: "#e5e7eb", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", color: "#9ca3af" }}>🏢</div>
+                    )}
+                    <h1 style={{ margin: 0 }}>Welcome, {data.organization_name}</h1>
+                </div>
 
                 <div style={{ display: "flex", gap: "20px", marginTop: "30px" }}>
                     <div style={{ flex: 1, background: "white", padding: "20px", borderRadius: "8px", boxShadow: "0 2px 4px rgba(0,0,0,0.1)", textAlign: "center" }}>

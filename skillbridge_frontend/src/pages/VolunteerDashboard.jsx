@@ -68,6 +68,7 @@ const VolunteerDashboard = () => {
     }
 
     const volunteerName = profile.name || profile.full_name || "Volunteer";
+    const profilePhoto = profile.photo_url ? `http://localhost:8000${profile.photo_url}` : "";
 
     return (
         <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", fontFamily: "system-ui, sans-serif" }}>
@@ -94,12 +95,13 @@ const VolunteerDashboard = () => {
                                 width: "36px",
                                 height: "36px",
                                 borderRadius: "50%",
-                                background: "#e5e7eb",
+                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "#e5e7eb",
                                 display: "flex",
                                 alignItems: "center",
-                                justifyContent: "center"
+                                justifyContent: "center",
+                                overflow: "hidden"
                             }}>
-                                <User size={18} color="#9ca3af" />
+                                {!profilePhoto && <User size={18} color="#9ca3af" />}
                             </div>
                         </div>
                     </nav>
@@ -120,8 +122,9 @@ const VolunteerDashboard = () => {
                                 width: "56px",
                                 height: "56px",
                                 borderRadius: "50%",
-                                background: "#e5e7eb",
-                                flexShrink: 0
+                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "#e5e7eb",
+                                flexShrink: 0,
+                                overflow: "hidden"
                             }} />
                             <div>
                                 <h3 style={{ margin: "0 0 2px", fontSize: "16px", fontWeight: "600", color: "#374151" }}>{volunteerName}</h3>
