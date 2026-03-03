@@ -35,33 +35,43 @@ const VolunteerApplications = () => {
     }, []);
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", fontFamily: "system-ui, sans-serif" }}>
+        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
             <Sidebar />
             <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
                 {/* Top Navigation Bar */}
                 <header style={{
                     background: "white",
-                    padding: "16px 32px",
-                    boxShadow: "0 1px 2px rgba(0,0,0,0.06)",
+                    padding: "14px 32px",
+                    borderBottom: "1px solid #e2e8f0",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between"
                 }}>
-                    <h1 style={{ fontSize: "22px", fontWeight: "700", color: "#000", margin: 0 }}>SkillBridge</h1>
-                    <nav style={{ display: "flex", alignItems: "center", gap: "28px" }}>
-                        <Link to="/volunteer-dashboard" style={{ textDecoration: "none", color: "#6b7280", fontWeight: "500", fontSize: "15px" }}>Dashboard</Link>
-                        <Link to="/volunteer-opportunities" style={{ textDecoration: "none", color: "#6b7280", fontWeight: "500", fontSize: "15px" }}>Opportunities</Link>
-                        <Link to="/volunteer-applications" style={{ textDecoration: "none", color: "#374151", fontWeight: "600", fontSize: "15px" }}>Applications</Link>
-                        <Link to="/volunteer-messages" style={{ textDecoration: "none", color: "#6b7280", fontWeight: "500", fontSize: "15px" }}>Messages</Link>
-                        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginLeft: "8px", paddingLeft: "20px", borderLeft: "1.5px solid #e5e7eb" }}>
-                            <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: "12px", fontWeight: "600", padding: "4px 12px", borderRadius: "9999px", letterSpacing: "0.025em", lineHeight: "1" }}>Volunteer</span>
+                    <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>SkillBridge</h1>
+                    <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        {[
+                            { to: "/volunteer-dashboard", label: "Dashboard" },
+                            { to: "/volunteer-opportunities", label: "Opportunities" },
+                            { to: "/volunteer-applications", label: "Applications", active: true },
+                            { to: "/volunteer-messages", label: "Messages" }
+                        ].map(link => (
+                            <Link key={link.label} to={link.to} style={{
+                                textDecoration: "none", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 500,
+                                color: link.active ? "#2563eb" : "#64748b",
+                                background: link.active ? "#eff6ff" : "transparent",
+                                transition: "all 0.2s"
+                            }}>{link.label}</Link>
+                        ))}
+                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
+                            <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>Volunteer</span>
                             <NotificationBell />
                             <div style={{
-                                width: "36px", height: "36px", borderRadius: "50%",
-                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "#e5e7eb",
-                                display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden"
+                                width: 36, height: 36, borderRadius: "50%",
+                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
+                                display: "flex", alignItems: "center", justifyContent: "center",
+                                overflow: "hidden", border: "2px solid #e2e8f0"
                             }}>
-                                {!profilePhoto && <User size={18} color="#9ca3af" />}
+                                {!profilePhoto && <User size={18} color="#94a3b8" />}
                             </div>
                         </div>
                     </nav>

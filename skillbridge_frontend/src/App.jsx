@@ -14,7 +14,9 @@ import EditProfileNGO from "./pages/EditProfileNGO";
 import EditProfileVolunteer from "./pages/EditProfileVolunteer";
 import LandingPage from "./pages/LandingPage";
 import ManageOpportunities from "./pages/ManageOpportunities";
+import NGOApplications from "./pages/NGOApplications";
 import NGODashboard from "./pages/NGODashboard";
+import NGOMessages from "./pages/NGOMessages";
 import OpportunityDetail from "./pages/OpportunityDetail";
 import VolunteerApplications from "./pages/VolunteerApplications";
 import VolunteerDashboard from "./pages/VolunteerDashboard";
@@ -80,6 +82,14 @@ const App = () => {
           <Route
             path="/edit-opportunity/:id"
             element={<ProtectedRoute allowedRoles={["NGO"]}><EditOpportunity /></ProtectedRoute>}
+          />
+          <Route
+            path="/ngo-applications"
+            element={<ProtectedRoute allowedRoles={["NGO"]}><NGOApplications /></ProtectedRoute>}
+          />
+          <Route
+            path="/ngo-messages"
+            element={<ProtectedRoute allowedRoles={["NGO"]}><NGOMessages /></ProtectedRoute>}
           />
 
           {/* Protected Routes - CreateNewopportunity*/}
