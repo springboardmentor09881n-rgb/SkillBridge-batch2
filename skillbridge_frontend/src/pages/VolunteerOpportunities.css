@@ -1,0 +1,179 @@
+.page{
+max-width:900px;
+margin:auto;
+padding:40px 20px;
+font-family:sans-serif;
+}
+
+h1{
+font-size:26px;
+margin-bottom:5px;
+}
+
+p{
+color:#64748b;
+}
+
+/* FILTER BOX */
+
+.filter-box{
+background:#ffffff;
+border:1px solid #e2e8f0;
+padding:20px;
+border-radius:10px;
+margin-top:20px;
+}
+
+.filter-row{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.filter-group{
+flex:1;
+min-width:200px;
+}
+
+label{
+font-size:13px;
+font-weight:600;
+}
+
+/* SEARCH INPUT */
+
+.search-input{
+display:flex;
+align-items:center;
+gap:8px;
+border:1px solid #e2e8f0;
+border-radius:6px;
+padding:6px 10px;
+margin-top:5px;
+background:white;
+}
+
+.search-input input{
+border:none;
+outline:none;
+width:100%;
+}
+
+/* CHIPS */
+
+.chips{
+margin-top:8px;
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+}
+
+.chips button{
+padding:4px 10px;
+border-radius:6px;
+border:1px solid #e2e8f0;
+background:white;
+font-size:12px;
+cursor:pointer;
+}
+
+/* STATUS */
+
+.status select{
+width:100%;
+padding:7px;
+border-radius:6px;
+border:1px solid #e2e8f0;
+margin-top:5px;
+}
+
+/* RESET */
+
+.reset-row{
+display:flex;
+justify-content:flex-end;
+margin-top:12px;
+}
+
+.reset-row button{
+padding:6px 14px;
+border-radius:6px;
+border:1px solid #e2e8f0;
+background:white;
+cursor:pointer;
+}
+
+/* CARD */
+
+.card{
+background:white;
+border:1px solid #e2e8f0;
+border-radius:10px;
+padding:18px;
+margin-top:16px;
+}
+
+.card-top{
+display:flex;
+justify-content:space-between;
+}
+
+.ngo{
+font-size:12px;
+color:#64748b;
+}
+
+.status{
+background:#22c55e;
+color:white;
+padding:3px 10px;
+border-radius:20px;
+font-size:12px;
+}
+
+/* SKILLS */
+
+.skills{
+display:flex;
+gap:8px;
+flex-wrap:wrap;
+margin-top:8px;
+}
+
+.skills span{
+background:#eff6ff;
+color:#2563eb;
+padding:3px 10px;
+border-radius:20px;
+font-size:12px;
+}
+
+/* CARD FOOTER */
+
+.card-bottom{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-top:12px;
+}
+
+.info{
+display:flex;
+gap:14px;
+color:#64748b;
+font-size:14px;
+}
+
+.apply{
+background:#2563eb;
+color:white;
+border:none;
+padding:7px 16px;
+border-radius:7px;
+cursor:pointer;
+}
+
+.center{
+text-align:center;
+margin-top:20px;
+}
