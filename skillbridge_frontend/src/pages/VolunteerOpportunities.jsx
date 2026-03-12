@@ -9,21 +9,32 @@ const VolunteerOpportunities = () => {
     const [opportunities, setOpportunities] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState("All");
-    const [skillSearch, setSkillSearch] = useState("");
+    const [selectedSkills, setSelectedSkills] = useState([]);
+    const [skillSearchText, setSkillSearchText] = useState("");
     const [locationSearch, setLocationSearch] = useState("");
+    const [durationSearch, setDurationSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("Open");
     const [profilePhoto, setProfilePhoto] = useState("");
+    const [applyModal, setApplyModal] = useState(null);
+    const [applyMessage, setApplyMessage] = useState("");
+    const [applyLoading, setApplyLoading] = useState(false);
+    const [toast, setToast] = useState(null);
+    const [appliedIds, setAppliedIds] = useState(new Set());
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [oppsData, profileData] = await Promise.all([
+                const [oppsData, profileData, appsData] = await Promise.all([
                     apiFetch("/opportunities", { method: "GET" }).catch(() => []),
-                    apiFetch("/dashboard/volunteer", { method: "GET" }).catch(() => null)
+                    apiFetch("/dashboard/volunteer", { method: "GET" }).catch(() => null),
+                    apiFetch("/applications/volunteer", { method: "GET" }).catch(() => [])
                 ]);
                 setOpportunities(Array.isArray(oppsData) ? oppsData : []);
                 if (profileData?.photo_url) {
                     setProfilePhoto(`http://localhost:8000${profileData.photo_url}`);
+                }
+                if (Array.isArray(appsData)) {
+                    setAppliedIds(new Set(appsData.map(a => a.opportunity_id)));
                 }
             } catch (err) {
                 console.error("Failed to fetch data:", err);
@@ -35,31 +46,45 @@ const VolunteerOpportunities = () => {
         fetchData();
     }, []);
 
-    // Collect unique skills and locations for quick-filter chips
+    // Collect unique skills, locations, durations for quick-filter chips
     const allSkills = [...new Set(opportunities.flatMap(o => o.required_skills || []))].slice(0, 6);
     const allLocations = [...new Set(opportunities.map(o => o.location).filter(Boolean))].slice(0, 6);
+    const allDurations = [...new Set(opportunities.map(o => o.duration).filter(Boolean))].slice(0, 6);
 
     // Filter logic
     const filteredOpps = opportunities.filter(opp => {
         if (statusFilter === "Open" && opp.status !== "Open") return false;
         if (statusFilter === "Closed" && opp.status !== "Closed") return false;
-        if (skillSearch && !(opp.required_skills || []).some(s => s.toLowerCase().includes(skillSearch.toLowerCase()))) return false;
+        if (selectedSkills.length > 0 && !selectedSkills.every(sk => (opp.required_skills || []).some(s => s.toLowerCase().includes(sk.toLowerCase())))) return false;
         if (locationSearch && !(opp.location || "").toLowerCase().includes(locationSearch.toLowerCase())) return false;
+        if (durationSearch && !(opp.duration || "").toLowerCase().includes(durationSearch.toLowerCase())) return false;
         return true;
     });
 
     const openCount = opportunities.filter(o => o.status === "Open").length;
     const closedCount = opportunities.filter(o => o.status === "Closed").length;
 
-    const handleApply = async (oppId) => {
+    const showToast = (msg, type = "success") => {
+        setToast({ msg, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    const handleApply = async () => {
+        if (!applyModal) return;
+        setApplyLoading(true);
         try {
             await apiFetch("/applications", {
                 method: "POST",
-                body: JSON.stringify({ opportunity_id: oppId, message: "" })
+                body: JSON.stringify({ opportunity_id: applyModal._id, message: applyMessage })
             });
-            alert("Application submitted successfully!");
+            showToast("Application submitted successfully!");
+            setAppliedIds(prev => new Set([...prev, applyModal._id]));
+            setApplyModal(null);
+            setApplyMessage("");
         } catch (err) {
-            alert(err.message || "Failed to apply.");
+            showToast(err.message || "Failed to apply.", "error");
+        } finally {
+            setApplyLoading(false);
         }
     };
 
@@ -127,21 +152,32 @@ const VolunteerOpportunities = () => {
                                     <input
                                         type="text"
                                         placeholder="Search skills..."
-                                        value={skillSearch}
-                                        onChange={e => setSkillSearch(e.target.value)}
+                                        value={skillSearchText}
+                                        onChange={e => setSkillSearchText(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === "Enter" && skillSearchText.trim()) {
+                                                e.preventDefault();
+                                                const val = skillSearchText.trim();
+                                                if (!selectedSkills.includes(val)) setSelectedSkills(prev => [...prev, val]);
+                                                setSkillSearchText("");
+                                            }
+                                        }}
                                         style={{ width: "100%", padding: "8px 8px 8px 32px", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "14px" }}
                                     />
                                 </div>
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
-                                    {allSkills.map(skill => (
-                                        <button key={skill} onClick={() => setSkillSearch(skill)}
-                                            style={{
-                                                padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
-                                                background: skillSearch === skill ? "#2563eb" : "white",
-                                                color: skillSearch === skill ? "white" : "#374151",
-                                                border: "1px solid #e5e7eb"
-                                            }}>{skill}</button>
-                                    ))}
+                                    {allSkills.map(skill => {
+                                        const active = selectedSkills.includes(skill);
+                                        return (
+                                            <button key={skill} onClick={() => setSelectedSkills(prev => active ? prev.filter(s => s !== skill) : [...prev, skill])}
+                                                style={{
+                                                    padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
+                                                    background: active ? "#2563eb" : "white",
+                                                    color: active ? "white" : "#374151",
+                                                    border: "1px solid #e5e7eb"
+                                                }}>{skill}{active ? " ✕" : ""}</button>
+                                        );
+                                    })}
                                 </div>
                             </div>
                             <div style={{ flex: 1, minWidth: "200px" }}>
@@ -168,6 +204,30 @@ const VolunteerOpportunities = () => {
                                     ))}
                                 </div>
                             </div>
+                            <div style={{ flex: 1, minWidth: "200px" }}>
+                                <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Duration</label>
+                                <div style={{ position: "relative" }}>
+                                    <Clock size={16} color="#9ca3af" style={{ position: "absolute", left: "10px", top: "10px" }} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search duration..."
+                                        value={durationSearch}
+                                        onChange={e => setDurationSearch(e.target.value)}
+                                        style={{ width: "100%", padding: "8px 8px 8px 32px", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "14px" }}
+                                    />
+                                </div>
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
+                                    {allDurations.map(dur => (
+                                        <button key={dur} onClick={() => setDurationSearch(dur)}
+                                            style={{
+                                                padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
+                                                background: durationSearch === dur ? "#2563eb" : "white",
+                                                color: durationSearch === dur ? "white" : "#374151",
+                                                border: "1px solid #e5e7eb"
+                                            }}>{dur}</button>
+                                    ))}
+                                </div>
+                            </div>
                             <div style={{ minWidth: "140px" }}>
                                 <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Status</label>
                                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
@@ -179,7 +239,7 @@ const VolunteerOpportunities = () => {
                             </div>
                         </div>
                         <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                            <button onClick={() => { setSkillSearch(""); setLocationSearch(""); setStatusFilter("Open"); }}
+                            <button onClick={() => { setSelectedSkills([]); setSkillSearchText(""); setLocationSearch(""); setDurationSearch(""); setStatusFilter("Open"); }}
                                 style={{ padding: "6px 16px", borderRadius: "6px", border: "1px solid #e5e7eb", background: "white", fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", color: "#374151" }}>
                                 🔄 Reset Filters
                             </button>
@@ -243,11 +303,19 @@ const VolunteerOpportunities = () => {
                                                 color: "#2563eb", fontWeight: "500", textDecoration: "none", fontSize: "14px"
                                             }}>View details &gt;</Link>
                                             {opp.status === "Open" && (
-                                                <button onClick={() => handleApply(opp._id)} style={{
-                                                    padding: "8px 20px", background: "#2563eb", color: "white",
-                                                    border: "none", borderRadius: "8px", fontSize: "14px",
-                                                    fontWeight: "600", cursor: "pointer"
-                                                }}>Apply</button>
+                                                appliedIds.has(opp._id) ? (
+                                                    <span style={{
+                                                        padding: "8px 20px", background: "#dcfce7", color: "#16a34a",
+                                                        borderRadius: "8px", fontSize: "14px",
+                                                        fontWeight: "600", border: "1px solid #bbf7d0"
+                                                    }}>Applied</span>
+                                                ) : (
+                                                    <button onClick={() => { setApplyModal(opp); setApplyMessage(""); }} style={{
+                                                        padding: "8px 20px", background: "#2563eb", color: "white",
+                                                        border: "none", borderRadius: "8px", fontSize: "14px",
+                                                        fontWeight: "600", cursor: "pointer"
+                                                    }}>Apply</button>
+                                                )
                                             )}
                                         </div>
                                     </div>
@@ -259,6 +327,56 @@ const VolunteerOpportunities = () => {
                         </div>
                     )}
                 </main>
+
+                {/* Application Modal */}
+                {applyModal && (
+                    <div style={{
+                        position: "fixed", top: 0, left: 0, right: 0, bottom: 0,
+                        background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000
+                    }} onClick={() => setApplyModal(null)}>
+                        <div style={{
+                            background: "white", borderRadius: "16px", padding: "32px", width: "100%", maxWidth: "500px",
+                            boxShadow: "0 20px 60px rgba(0,0,0,0.15)"
+                        }} onClick={e => e.stopPropagation()}>
+                            <h3 style={{ fontSize: "20px", fontWeight: "700", color: "#1a1a1a", margin: "0 0 4px" }}>Apply to Opportunity</h3>
+                            <p style={{ fontSize: "14px", color: "#6b7280", margin: "0 0 20px" }}>{applyModal.title}</p>
+                            <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>
+                                Cover Message (optional)
+                            </label>
+                            <textarea
+                                value={applyMessage}
+                                onChange={e => setApplyMessage(e.target.value)}
+                                placeholder="Tell the NGO why you're a great fit..."
+                                rows={4}
+                                style={{
+                                    width: "100%", padding: "12px", borderRadius: "8px", border: "1px solid #e5e7eb",
+                                    fontSize: "14px", resize: "vertical", fontFamily: "inherit"
+                                }}
+                            />
+                            <div style={{ display: "flex", justifyContent: "flex-end", gap: "12px", marginTop: "20px" }}>
+                                <button onClick={() => setApplyModal(null)} style={{
+                                    padding: "10px 20px", borderRadius: "8px", border: "1px solid #e5e7eb",
+                                    background: "white", fontSize: "14px", fontWeight: "500", cursor: "pointer", color: "#374151"
+                                }}>Cancel</button>
+                                <button onClick={handleApply} disabled={applyLoading} style={{
+                                    padding: "10px 24px", borderRadius: "8px", border: "none",
+                                    background: "#2563eb", color: "white", fontSize: "14px", fontWeight: "600",
+                                    cursor: applyLoading ? "not-allowed" : "pointer", opacity: applyLoading ? 0.7 : 1
+                                }}>{applyLoading ? "Submitting..." : "Submit Application"}</button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Toast */}
+                {toast && (
+                    <div style={{
+                        position: "fixed", bottom: 24, right: 24, padding: "14px 24px", borderRadius: "10px",
+                        background: toast.type === "error" ? "#fee2e2" : "#dcfce7",
+                        color: toast.type === "error" ? "#dc2626" : "#16a34a",
+                        fontWeight: 600, fontSize: 14, zIndex: 2000, boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                    }}>{toast.msg}</div>
+                )}
             </div>
         </div>
     );

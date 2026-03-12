@@ -7,14 +7,22 @@ import apiFetch from "../services/api";
 
 const NGODashboard = () => {
     const [data, setData] = useState(null);
+    const [appStats, setAppStats] = useState({ applications: 0, accepted: 0, pending: 0 });
+    const [recentApps, setRecentApps] = useState([]);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
     useEffect(() => {
         const fetchDashboard = async () => {
             try {
-                const responseData = await apiFetch("/dashboard/ngo", { method: "GET" });
+                const [responseData, statsData, appsData] = await Promise.all([
+                    apiFetch("/dashboard/ngo", { method: "GET" }),
+                    apiFetch("/applications/ngo/stats", { method: "GET" }).catch(() => ({ applications: 0, accepted: 0, pending: 0 })),
+                    apiFetch("/applications/ngo", { method: "GET" }).catch(() => [])
+                ]);
                 setData(responseData);
+                setAppStats(statsData);
+                if (Array.isArray(appsData)) setRecentApps(appsData.slice(0, 5));
             } catch (error) {
                 console.error("Error fetching dashboard:", error);
             } finally {
@@ -53,9 +61,9 @@ const NGODashboard = () => {
 
     const overviewCards = [
         { label: "Active Opportunities", value: data.active_opportunities, icon: <Briefcase size={20} />, gradient: "linear-gradient(135deg, #f0fdf4, #dcfce7)", color: "#16a34a", iconBg: "#dcfce7" },
-        { label: "Applications", value: 0, icon: <FileCheck size={20} />, gradient: "linear-gradient(135deg, #faf5ff, #ede9fe)", color: "#7c3aed", iconBg: "#ede9fe" },
-        { label: "Active Volunteers", value: 0, icon: <Users size={20} />, gradient: "linear-gradient(135deg, #fff7ed, #fed7aa)", color: "#ea580c", iconBg: "#ffedd5" },
-        { label: "Pending", value: 0, icon: <Clock size={20} />, gradient: "linear-gradient(135deg, #fffbeb, #fef3c7)", color: "#d97706", iconBg: "#fef3c7" }
+        { label: "Applications", value: appStats.applications, icon: <FileCheck size={20} />, gradient: "linear-gradient(135deg, #faf5ff, #ede9fe)", color: "#7c3aed", iconBg: "#ede9fe" },
+        { label: "Active Volunteers", value: appStats.accepted, icon: <Users size={20} />, gradient: "linear-gradient(135deg, #fff7ed, #fed7aa)", color: "#ea580c", iconBg: "#ffedd5" },
+        { label: "Pending", value: appStats.pending, icon: <Clock size={20} />, gradient: "linear-gradient(135deg, #fffbeb, #fef3c7)", color: "#d97706", iconBg: "#fef3c7" }
     ];
 
     return (
@@ -262,9 +270,33 @@ const NGODashboard = () => {
                                     }}>View All <ArrowRight size={14} /></Link>
                                 </div>
                                 <div style={{ textAlign: "center", padding: "32px 0" }}>
-                                    <FileCheck size={32} color="#cbd5e1" style={{ marginBottom: 12 }} />
-                                    <p style={{ color: "#94a3b8", fontSize: 14, margin: "0 0 4px" }}>No applications yet</p>
-                                    <p style={{ color: "#cbd5e1", fontSize: 13, margin: 0 }}>Applications will appear here when volunteers apply</p>
+                                    {recentApps.length === 0 ? (
+                                        <>
+                                            <FileCheck size={32} color="#cbd5e1" style={{ marginBottom: 12 }} />
+                                            <p style={{ color: "#94a3b8", fontSize: 14, margin: "0 0 4px" }}>No applications yet</p>
+                                            <p style={{ color: "#cbd5e1", fontSize: 13, margin: 0 }}>Applications will appear here when volunteers apply</p>
+                                        </>
+                                    ) : (
+                                        <div style={{ textAlign: "left", display: "flex", flexDirection: "column", gap: 12 }}>
+                                            {recentApps.map(app => (
+                                                <div key={app._id} style={{
+                                                    display: "flex", justifyContent: "space-between", alignItems: "center",
+                                                    padding: "12px 16px", borderRadius: 10, border: "1px solid #e2e8f0", background: "#f8fafc"
+                                                }}>
+                                                    <div>
+                                                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{app.volunteer_name || "Volunteer"}</p>
+                                                        <p style={{ margin: "2px 0 0", fontSize: 12, color: "#94a3b8" }}>Applied {new Date(app.applied_at).toLocaleDateString()}</p>
+                                                    </div>
+                                                    <span style={{
+                                                        padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                                                        background: app.status === "accepted" ? "#dcfce7" : app.status === "rejected" ? "#fee2e2" : "#fef3c7",
+                                                        color: app.status === "accepted" ? "#16a34a" : app.status === "rejected" ? "#dc2626" : "#d97706",
+                                                        textTransform: "capitalize"
+                                                    }}>{app.status}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 

@@ -74,9 +74,13 @@ const NotificationBell = () => {
                 console.error(e);
             }
         }
-        // Navigate to opportunity
-        if (notif.opportunity_id) {
-            setOpen(false);
+        // Navigate based on notification type
+        setOpen(false);
+        if (notif.type === "application_status") {
+            navigate("/volunteer-applications");
+        } else if (notif.type === "new_application") {
+            navigate("/ngo-applications");
+        } else if (notif.opportunity_id) {
             navigate(`/opportunity/${notif.opportunity_id}`);
         }
     };

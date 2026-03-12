@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
-from database import opportunities_collection, notifications_collection
+from database import opportunities_collection, notifications_collection, users_collection, applications_collection
 from schemas.opportunity import OpportunityCreate, OpportunityUpdate
 from auth.dependencies import get_current_user
 from bson import ObjectId
@@ -23,16 +23,20 @@ async def create_opportunity(opportunity: OpportunityCreate, user: dict = Depend
     created_opp = await opportunities_collection.find_one({"_id": result.inserted_id})
     created_opp["_id"] = str(created_opp["_id"])
 
-    # Notification for volunteers
-    await notifications_collection.insert_one({
-        "type": "new_opportunity",
-        "message": f"New Opportunity: {opportunity.title}",
-        "opportunity_id": str(result.inserted_id),
-        "ngo_id": user["user_id"],
-        "role": "Volunteer",
-        "read_by": [],
-        "created_at": datetime.utcnow()
-    })
+    # Notification for all volunteers
+    volunteers = await users_collection.find({"role": "Volunteer"}, {"email": 1}).to_list(None)
+    if volunteers:
+        notifs = [{
+            "type": "new_opportunity",
+            "message": f"New Opportunity: {opportunity.title}",
+            "opportunity_id": str(result.inserted_id),
+            "ngo_id": user["user_id"],
+            "user_id": v["email"],
+            "role": "Volunteer",
+            "read_by": [],
+            "created_at": datetime.utcnow()
+        } for v in volunteers]
+        await notifications_collection.insert_many(notifs)
 
     return {"message": "Opportunity created successfully", "opportunity": created_opp}
 
@@ -148,15 +152,19 @@ async def update_opportunity(
         new_status = update_data["status"]
         title = existing_opp.get("title", "an opportunity")
 
-        await notifications_collection.insert_one({
-            "type": "status_change",
-            "message": f"Opportunity {new_status}: {title}",
-            "opportunity_id": opportunity_id,
-            "ngo_id": user["user_id"],
-            "role": "Volunteer",
-            "read_by": [],
-            "created_at": datetime.utcnow()
-        })
+        volunteers = await users_collection.find({"role": "Volunteer"}, {"email": 1}).to_list(None)
+        if volunteers:
+            notifs = [{
+                "type": "status_change",
+                "message": f"Opportunity {new_status}: {title}",
+                "opportunity_id": opportunity_id,
+                "ngo_id": user["user_id"],
+                "user_id": v["email"],
+                "role": "Volunteer",
+                "read_by": [],
+                "created_at": datetime.utcnow()
+            } for v in volunteers]
+            await notifications_collection.insert_many(notifs)
 
     return {"message": "Opportunity updated successfully"}
 
@@ -180,6 +188,32 @@ async def delete_opportunity(opportunity_id: str, user: dict = Depends(get_curre
 
     if existing_opp["ngo_id"] != user["user_id"]:
         raise HTTPException(status_code=403, detail="You can only delete your own opportunities")
+
+    title = existing_opp.get("title", "an opportunity")
+
+    # Find volunteers who applied, then remove their applications
+    applied = await applications_collection.find(
+        {"opportunity_id": opportunity_id}, {"volunteer_id": 1}
+    ).to_list(None)
+    volunteer_ids = list({a["volunteer_id"] for a in applied})
+
+    await applications_collection.delete_many({"opportunity_id": opportunity_id})
+
+    # Notify affected volunteers
+    if volunteer_ids:
+        notifs = [{
+            "type": "opportunity_deleted",
+            "message": f"Opportunity removed: {title}",
+            "opportunity_id": opportunity_id,
+            "user_id": vid,
+            "role": "Volunteer",
+            "read_by": [],
+            "created_at": datetime.utcnow()
+        } for vid in volunteer_ids]
+        await notifications_collection.insert_many(notifs)
+
+    # Clean up old notifications referencing this opportunity
+    await notifications_collection.delete_many({"opportunity_id": opportunity_id, "type": {"$ne": "opportunity_deleted"}})
 
     await opportunities_collection.delete_one({"_id": obj_id})
 
