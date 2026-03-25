@@ -17,8 +17,16 @@ const OpportunityDetail = () => {
     useEffect(() => {
         const fetchOpp = async () => {
             try {
-                const data = await apiFetch(`/opportunities/${id}`, { method: "GET" });
+                const [data, apps] = await Promise.all([
+                    apiFetch(`/opportunities/${id}`, { method: "GET" }),
+                    user?.role === "Volunteer"
+                        ? apiFetch("/applications/volunteer", { method: "GET" }).catch(() => [])
+                        : Promise.resolve([])
+                ]);
                 setOpportunity(data);
+                if (Array.isArray(apps) && apps.some(a => a.opportunity_id === id)) {
+                    setApplied(true);
+                }
             } catch (err) {
                 console.error("Failed to fetch opportunity:", err);
             } finally {
@@ -26,7 +34,7 @@ const OpportunityDetail = () => {
             }
         };
         if (id) fetchOpp();
-    }, [id]);
+    }, [id, user]);
 
     const handleApply = async (e) => {
         e.preventDefault();

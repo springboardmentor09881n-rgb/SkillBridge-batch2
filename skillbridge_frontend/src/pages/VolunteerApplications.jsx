@@ -105,21 +105,34 @@ const VolunteerApplications = () => {
                                     background: "white",
                                     borderRadius: "12px",
                                     padding: "24px",
-                                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)"
+                                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
+                                    border: "1px solid #e2e8f0"
                                 }}>
                                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-                                        <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#1a1a1a", margin: 0 }}>
-                                            {opp?.title || "Opportunity"}
-                                        </h3>
+                                        <div>
+                                            <h3 style={{ fontSize: "18px", fontWeight: "600", color: "#1a1a1a", margin: "0 0 4px" }}>
+                                                {app.opportunity_title || opp?.title || "Opportunity"}
+                                            </h3>
+                                            <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
+                                                Applied {app.applied_at ? new Date(app.applied_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
+                                            </p>
+                                        </div>
                                         <span style={{
                                             background: app.status === "accepted" ? "#dcfce7" : app.status === "pending" ? "#fef3c7" : "#fee2e2",
                                             color: app.status === "accepted" ? "#16a34a" : app.status === "pending" ? "#d97706" : "#dc2626",
                                             padding: "6px 12px",
                                             borderRadius: "20px",
                                             fontSize: "13px",
-                                            fontWeight: "500"
+                                            fontWeight: "500",
+                                            textTransform: "capitalize"
                                         }}>{app.status}</span>
                                     </div>
+                                    {app.message && (
+                                        <div style={{
+                                            background: "#f8fafc", borderLeft: "3px solid #2563eb", padding: "10px 14px",
+                                            borderRadius: "0 8px 8px 0", margin: "12px 0", fontSize: 14, color: "#4b5563", lineHeight: 1.5
+                                        }}>{app.message}</div>
+                                    )}
                                     {opp && (
                                         <Link to={`/opportunity/${app.opportunity_id}`} style={{ color: "#2563eb", fontSize: "14px", marginTop: "8px", display: "inline-block" }}>
                                             View opportunity details

@@ -6,6 +6,7 @@ from routes.profile import router as profile_router
 from routes.opportunity import router as opportunity_router
 from routes.dashboard import router as dashboard_router
 from routes.notification import router as notification_router
+from routes.application import router as application_router
 import os
 
 app = FastAPI(title="SkillBridge Backend")
@@ -30,6 +31,7 @@ app.include_router(profile_router, prefix="/api/profile", tags=["Profile"])
 app.include_router(opportunity_router, prefix="/api/opportunities", tags=["Opportunity"])
 app.include_router(dashboard_router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(notification_router, prefix="/api/notifications", tags=["Notifications"])
+app.include_router(application_router, prefix="/api/applications", tags=["Applications"])
 
 # Serve uploaded files
 uploads_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "uploads")

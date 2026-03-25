@@ -11,7 +11,7 @@ router = APIRouter()
 async def get_unread_count(user: dict = Depends(get_current_user)):
     """Get count of unread notifications for current user."""
     pipeline = [
-        {"$match": {"role": user["role"]}},
+        {"$match": {"user_id": user["user_id"]}},
         {"$match": {"read_by": {"$nin": [user["user_id"]]}}},
         {"$count": "count"}
     ]
@@ -24,7 +24,7 @@ async def get_unread_count(user: dict = Depends(get_current_user)):
 async def mark_all_as_read(user: dict = Depends(get_current_user)):
     """Mark all notifications as read for current user."""
     await notifications_collection.update_many(
-        {"role": user["role"]},
+        {"user_id": user["user_id"]},
         {"$addToSet": {"read_by": user["user_id"]}}
     )
     return {"message": "All notifications marked as read"}
@@ -34,7 +34,7 @@ async def mark_all_as_read(user: dict = Depends(get_current_user)):
 async def get_notifications(user: dict = Depends(get_current_user)):
     """Get all notifications for the current user (newest first)."""
     cursor = notifications_collection.find(
-        {"role": user["role"]}
+        {"user_id": user["user_id"]}
     ).sort("created_at", -1)
     notifications = await cursor.to_list(length=50)
     for n in notifications:
