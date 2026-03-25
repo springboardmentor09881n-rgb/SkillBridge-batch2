@@ -1,11 +1,14 @@
-import { Clock, MapPin, Search } from "lucide-react";
+import { Clock, MapPin, Search, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import Sidebar from "../components/Sidebar";
+import NotificationBell from "../components/NotificationBell";
+import apiFetch  from "../services/api";
 import "./VolunteerOpportunities.css";
 
 const VolunteerOpportunities = () => {
     const [opportunities, setOpportunities] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [filter, setFilter] = useState("All");
     const [skillSearch, setSkillSearch] = useState("");
     const [locationSearch, setLocationSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("Open");
@@ -32,11 +35,9 @@ const VolunteerOpportunities = () => {
         fetchData();
     }, []);
 
-    // Collect unique skills and locations for quick-filter chips
     const allSkills = [...new Set(opportunities.flatMap(o => o.required_skills || []))].slice(0, 6);
     const allLocations = [...new Set(opportunities.map(o => o.location).filter(Boolean))].slice(0, 6);
 
-    // Filter logic
     const filteredOpps = opportunities.filter(opp => {
         if (statusFilter === "Open" && opp.status !== "Open") return false;
         if (statusFilter === "Closed" && opp.status !== "Closed") return false;
@@ -44,9 +45,6 @@ const VolunteerOpportunities = () => {
         if (locationSearch && !(opp.location || "").toLowerCase().includes(locationSearch.toLowerCase())) return false;
         return true;
     });
-
-    const openCount = opportunities.filter(o => o.status === "Open").length;
-    const closedCount = opportunities.filter(o => o.status === "Closed").length;
 
     const handleApply = async (oppId) => {
         try {
@@ -64,6 +62,7 @@ const VolunteerOpportunities = () => {
         <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
             <Sidebar />
             <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+
                 {/* Header */}
                 <header style={{
                     background: "white",
@@ -91,32 +90,33 @@ const VolunteerOpportunities = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
                             <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>Volunteer</span>
                             <NotificationBell />
-                            <div style={{
-                                width: 36, height: 36, borderRadius: "50%",
-                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                overflow: "hidden", border: "2px solid #e2e8f0"
-                            }}>
-                                {!profilePhoto && <User size={18} color="#94a3b8" />}
-                            </div>
+                            <Link to="/edit-profile-volunteer" title="Open profile" style={{ textDecoration: "none" }}>
+                                <div style={{
+                                    width: 36, height: 36, borderRadius: "50%",
+                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
+                                }}>
+                                    {!profilePhoto && <User size={18} color="#94a3b8" />}
+                                </div>
+                            </Link>
                         </div>
                     </nav>
                 </header>
 
+                {/* Main Content */}
                 <main style={{ padding: "32px" }}>
                     <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1a1a1a", marginBottom: "8px" }}>Volunteering Opportunities</h2>
                     <p style={{ fontSize: "16px", color: "#6b7280", marginBottom: "24px" }}>Find opportunities that match your skills and interests</p>
 
                     {/* Search & Filters */}
                     <div style={{
-                        background: "white",
-                        borderRadius: "12px",
-                        padding: "24px",
-                        marginBottom: "24px",
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                        border: "1px solid #e5e7eb"
+                        background: "white", borderRadius: "12px", padding: "24px",
+                        marginBottom: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb"
                     }}>
                         <div style={{ display: "flex", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
+
+                            {/* Skills Filter */}
                             <div style={{ flex: 1, minWidth: "200px" }}>
                                 <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Skills</label>
                                 <div style={{ position: "relative" }}>
@@ -131,16 +131,17 @@ const VolunteerOpportunities = () => {
                                 </div>
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
                                     {allSkills.map(skill => (
-                                        <button key={skill} onClick={() => setSkillSearch(skill)}
-                                            style={{
-                                                padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
-                                                background: skillSearch === skill ? "#2563eb" : "white",
-                                                color: skillSearch === skill ? "white" : "#374151",
-                                                border: "1px solid #e5e7eb"
-                                            }}>{skill}</button>
+                                        <button key={skill} onClick={() => setSkillSearch(skill)} style={{
+                                            padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
+                                            background: skillSearch === skill ? "#2563eb" : "white",
+                                            color: skillSearch === skill ? "white" : "#374151",
+                                            border: "1px solid #e5e7eb"
+                                        }}>{skill}</button>
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Location Filter */}
                             <div style={{ flex: 1, minWidth: "200px" }}>
                                 <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Location</label>
                                 <div style={{ position: "relative" }}>
@@ -155,16 +156,17 @@ const VolunteerOpportunities = () => {
                                 </div>
                                 <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
                                     {allLocations.map(loc => (
-                                        <button key={loc} onClick={() => setLocationSearch(loc)}
-                                            style={{
-                                                padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
-                                                background: locationSearch === loc ? "#2563eb" : "white",
-                                                color: locationSearch === loc ? "white" : "#374151",
-                                                border: "1px solid #e5e7eb"
-                                            }}>{loc}</button>
+                                        <button key={loc} onClick={() => setLocationSearch(loc)} style={{
+                                            padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
+                                            background: locationSearch === loc ? "#2563eb" : "white",
+                                            color: locationSearch === loc ? "white" : "#374151",
+                                            border: "1px solid #e5e7eb"
+                                        }}>{loc}</button>
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Status Filter */}
                             <div style={{ minWidth: "140px" }}>
                                 <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Status</label>
                                 <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
@@ -175,77 +177,82 @@ const VolunteerOpportunities = () => {
                                 </select>
                             </div>
                         </div>
+
                         <div style={{ display: "flex", justifyContent: "flex-end" }}>
                             <button onClick={() => { setSkillSearch(""); setLocationSearch(""); setStatusFilter("Open"); }}
-                                style={{ padding: "6px 16px", borderRadius: "6px", border: "1px solid #e5e7eb", background: "white", fontSize: "13px", cursor: "pointer", display: "flex", alignItems: "center", gap: "4px", color: "#374151" }}>
+                                style={{ padding: "6px 16px", borderRadius: "6px", border: "1px solid #e5e7eb", background: "white", fontSize: "13px", cursor: "pointer", color: "#374151" }}>
                                 🔄 Reset Filters
                             </button>
                         </div>
                     </div>
 
-      {/* OPPORTUNITY LIST */}
+                    {/* Opportunities List */}
+                    {loading ? (
+                        <p style={{ color: "#6b7280", textAlign: "center", padding: "40px 0" }}>Loading opportunities...</p>
+                    ) : filteredOpps.length === 0 ? (
+                        <p style={{ color: "#6b7280", fontSize: "16px", textAlign: "center", padding: "40px 0" }}>No opportunities found.</p>
+                    ) : (
+                        filteredOpps.map(opp => (
+                            <div key={opp._id || opp.id} style={{
+                                background: "white", borderRadius: "12px", padding: "24px",
+                                marginBottom: "16px", border: "1px solid #e5e7eb",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.06)"
+                            }}>
+                                {/* Card Top */}
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
+                                    <div>
+                                        <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#1a1a1a", margin: 0 }}>{opp.title}</h3>
+                                        <p style={{ fontSize: "14px", color: "#6b7280", margin: "4px 0 0" }}>{opp.ngo}</p>
+                                    </div>
+                                    <span style={{
+                                        padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600",
+                                        background: opp.status === "Open" ? "#d1fae5" : "#fee2e2",
+                                        color: opp.status === "Open" ? "#065f46" : "#991b1b"
+                                    }}>{opp.status}</span>
+                                </div>
 
-      {filteredOpps.length === 0 ? (
-        <p className="center">No opportunities found.</p>
-      ) : (
-        filteredOpps.map((opp) => (
-          <div key={opp.id} className="card">
+                                <p style={{ fontSize: "14px", color: "#374151", marginBottom: "12px" }}>{opp.description}</p>
 
-            <div className="card-top">
-              <div>
-                <h3>{opp.title}</h3>
-                <p className="ngo">{opp.ngo}</p>
-              </div>
+                                {/* Skills */}
+                                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
+                                    {(opp.required_skills || []).map(s => (
+                                        <span key={s} style={{
+                                            padding: "4px 10px", borderRadius: "6px", fontSize: "12px",
+                                            background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe"
+                                        }}>{s}</span>
+                                    ))}
+                                </div>
 
-              <span className="status">{opp.status}</span>
-            </div>
-
-            <p>{opp.description}</p>
-
-            <div className="skills">
-              {opp.required_skills.map((s) => (
-                <span key={s}>{s}</span>
-              ))}
-            </div>
-
-                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                        <div style={{ display: "flex", gap: "16px", fontSize: "14px", color: "#6b7280" }}>
-                                            <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                                <MapPin size={14} /> {opp.location || "—"}
-                                            </span>
-                                            <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                                <Clock size={14} /> {opp.duration || "—"}
-                                            </span>
-                                        </div>
-                                        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                            <Link to={`/opportunity/${opp._id}`} style={{
-                                                color: "#2563eb", fontWeight: "500", textDecoration: "none", fontSize: "14px"
-                                            }}>View details &gt;</Link>
-                                            {opp.status === "Open" && (
-                                                <button onClick={() => handleApply(opp._id)} style={{
-                                                    padding: "8px 20px", background: "#2563eb", color: "white",
-                                                    border: "none", borderRadius: "8px", fontSize: "14px",
-                                                    fontWeight: "600", cursor: "pointer"
-                                                }}>Apply</button>
-                                            )}
-                                        </div>
+                                {/* Footer */}
+                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <div style={{ display: "flex", gap: "16px", fontSize: "14px", color: "#6b7280" }}>
+                                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                            <MapPin size={14} /> {opp.location || "—"}
+                                        </span>
+                                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                                            <Clock size={14} /> {opp.duration || "—"}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+                                        <Link to={`/opportunity/${opp._id}`} style={{
+                                            color: "#2563eb", fontWeight: "500", textDecoration: "none", fontSize: "14px"
+                                        }}>View details &gt;</Link>
+                                        {opp.status === "Open" && (
+                                            <button onClick={() => handleApply(opp._id)} style={{
+                                                padding: "8px 20px", background: "#2563eb", color: "white",
+                                                border: "none", borderRadius: "8px", fontSize: "14px",
+                                                fontWeight: "600", cursor: "pointer"
+                                            }}>Apply</button>
+                                        )}
                                     </div>
                                 </div>
-                            ))}
-                            {filteredOpps.length === 0 && (
-                                <p style={{ color: "#6b7280", fontSize: "16px", textAlign: "center", padding: "40px 0" }}>No opportunities found.</p>
-                            )}
-                        </div>
+                            </div>
+                        ))
                     )}
                 </main>
             </div>
-
-          </div>
-        ))
-      )}
-
-    </div>
-  );
+        </div>
+    );
 };
 
 export default VolunteerOpportunities;

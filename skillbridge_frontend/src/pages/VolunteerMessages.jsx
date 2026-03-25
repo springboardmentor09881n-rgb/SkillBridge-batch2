@@ -1,6 +1,7 @@
 import { User } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ChatWorkspace from "../components/ChatWorkspace";
 import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
@@ -45,27 +46,29 @@ const VolunteerMessages = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
                             <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>Volunteer</span>
                             <NotificationBell />
-                            <div style={{
-                                width: 36, height: 36, borderRadius: "50%",
-                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                overflow: "hidden", border: "2px solid #e2e8f0"
-                            }}>
-                                {!profilePhoto && <User size={18} color="#94a3b8" />}
-                            </div>
+                            <Link to="/edit-profile-volunteer" title="Open profile" style={{ textDecoration: "none" }}>
+                                <div style={{
+                                    width: 36, height: 36, borderRadius: "50%",
+                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
+                                }}>
+                                    {!profilePhoto && <User size={18} color="#94a3b8" />}
+                                </div>
+                            </Link>
                         </div>
                     </nav>
                 </header>
 
-                <div style={{ padding: "32px" }}>
+                <div style={{ padding: "28px 32px" }}>
                 <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1a1a1a", marginBottom: "8px" }}>Messages</h2>
-                <p style={{ fontSize: "16px", color: "#6b7280", marginBottom: "24px" }}>View and manage your messages with NGOs.</p>
-                <div style={{ background: "white", borderRadius: "12px", padding: "48px", textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.08)" }}>
-                    <p style={{ color: "#6b7280", fontSize: "16px" }}>No recent messages</p>
-                    <Link to="/volunteer-dashboard" style={{ color: "#2563eb", fontSize: "14px", marginTop: "12px", display: "inline-block" }}>
+                <p style={{ fontSize: "16px", color: "#6b7280", marginBottom: "20px" }}>Send and receive updates from NGOs in real-time style UI.</p>
+                <div style={{ marginBottom: 16 }}>
+                    <Link to="/volunteer-dashboard" style={{ color: "#2563eb", fontSize: "14px", display: "inline-block", textDecoration: "none", fontWeight: 600 }}>
                         Back to Dashboard
                     </Link>
                 </div>
+                <ChatWorkspace role="volunteer" />
                 </div>
             </div>
         </div>

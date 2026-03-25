@@ -94,14 +94,16 @@ const NGOApplications = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
                             <span style={{ background: "#dcfce7", color: "#16a34a", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>NGO</span>
                             <NotificationBell />
-                            <div style={{
-                                width: 36, height: 36, borderRadius: "50%",
-                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dcfce7, #d1fae5)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                overflow: "hidden", border: "2px solid #e2e8f0"
-                            }}>
-                                {!profilePhoto && <Building2 size={18} color="#94a3b8" />}
-                            </div>
+                            <Link to="/edit-profile-ngo" title="Open profile" style={{ textDecoration: "none" }}>
+                                <div style={{
+                                    width: 36, height: 36, borderRadius: "50%",
+                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dcfce7, #d1fae5)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
+                                }}>
+                                    {!profilePhoto && <Building2 size={18} color="#94a3b8" />}
+                                </div>
+                            </Link>
                         </div>
                     </nav>
                 </header>

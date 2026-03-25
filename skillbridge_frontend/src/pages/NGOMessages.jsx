@@ -1,6 +1,7 @@
-import { Building2, MessageSquare, Send } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import ChatWorkspace from "../components/ChatWorkspace";
 import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
@@ -41,14 +42,16 @@ const NGOMessages = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
                             <span style={{ background: "#dcfce7", color: "#16a34a", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>NGO</span>
                             <NotificationBell />
-                            <div style={{
-                                width: 36, height: 36, borderRadius: "50%",
-                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dcfce7, #d1fae5)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                overflow: "hidden", border: "2px solid #e2e8f0"
-                            }}>
-                                {!profilePhoto && <Building2 size={18} color="#94a3b8" />}
-                            </div>
+                            <Link to="/edit-profile-ngo" title="Open profile" style={{ textDecoration: "none" }}>
+                                <div style={{
+                                    width: 36, height: 36, borderRadius: "50%",
+                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dcfce7, #d1fae5)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
+                                }}>
+                                    {!profilePhoto && <Building2 size={18} color="#94a3b8" />}
+                                </div>
+                            </Link>
                         </div>
                     </nav>
                 </header>
@@ -56,34 +59,15 @@ const NGOMessages = () => {
                 <main style={{ flex: 1, padding: "28px 32px", overflowY: "auto" }}>
                     <div style={{ marginBottom: 24 }}>
                         <h2 style={{ fontSize: 26, fontWeight: 800, color: "#0f172a", margin: "0 0 4px", letterSpacing: "-0.02em" }}>Messages</h2>
-                        <p style={{ color: "#94a3b8", margin: 0, fontSize: 14 }}>Communicate with volunteers and team members</p>
+                        <p style={{ color: "#94a3b8", margin: 0, fontSize: 14 }}>Communicate with volunteers and get smart match suggestions</p>
                     </div>
 
-                    {/* Empty State */}
-                    <div style={{
-                        background: "white", borderRadius: 16, border: "1px solid #e2e8f0", padding: "64px 32px",
-                        textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-                    }}>
-                        <div style={{
-                            width: 64, height: 64, borderRadius: 16, background: "linear-gradient(135deg, #eff6ff, #dbeafe)",
-                            display: "flex", alignItems: "center", justifyContent: "center",
-                            margin: "0 auto 20px"
-                        }}>
-                            <MessageSquare size={28} color="#2563eb" />
-                        </div>
-                        <h3 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>No messages yet</h3>
-                        <p style={{ color: "#94a3b8", fontSize: 15, margin: "0 0 24px", maxWidth: 420, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
-                            Your conversations with volunteers will appear here. Messages will be available once volunteers start applying to your opportunities.
-                        </p>
-                        <Link to="/ngo-dashboard" style={{
-                            display: "inline-flex", alignItems: "center", gap: 8,
-                            background: "#2563eb", color: "white", padding: "10px 24px", borderRadius: 10,
-                            textDecoration: "none", fontSize: 14, fontWeight: 600,
-                            boxShadow: "0 2px 8px rgba(37,99,235,0.25)"
-                        }}>
-                            <Send size={16} /> Back to Dashboard
+                    <div style={{ marginBottom: 16 }}>
+                        <Link to="/ngo-dashboard" style={{ color: "#2563eb", fontSize: "14px", textDecoration: "none", fontWeight: 600 }}>
+                            Back to Dashboard
                         </Link>
                     </div>
+                    <ChatWorkspace role="ngo" />
                 </main>
             </div>
         </div>
