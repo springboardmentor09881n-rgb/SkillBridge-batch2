@@ -116,14 +116,16 @@ const VolunteerDashboard = () => {
                         <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
                             <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>Volunteer</span>
                             <NotificationBell />
-                            <div style={{
-                                width: 36, height: 36, borderRadius: "50%",
-                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                overflow: "hidden", border: "2px solid #e2e8f0"
-                            }}>
-                                {!profilePhoto && <User size={18} color="#94a3b8" />}
-                            </div>
+                            <Link to="/edit-profile-volunteer" title="Open profile" style={{ textDecoration: "none" }}>
+                                <div style={{
+                                    width: 36, height: 36, borderRadius: "50%",
+                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
+                                }}>
+                                    {!profilePhoto && <User size={18} color="#94a3b8" />}
+                                </div>
+                            </Link>
                         </div>
                     </nav>
                 </header>
