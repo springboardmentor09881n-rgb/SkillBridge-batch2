@@ -3,11 +3,12 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import NotificationBell from "../components/NotificationBell";
-import apiFetch  from "../services/api";
+import apiFetch, { PUBLIC_BASE_URL }  from "../services/api";
 import "./VolunteerOpportunities.css";
 
 const VolunteerOpportunities = () => {
     const [opportunities, setOpportunities] = useState([]);
+    const [appliedOpportunityIds, setAppliedOpportunityIds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [skillSearch, setSkillSearch] = useState("");
     const [locationSearch, setLocationSearch] = useState("");
@@ -17,13 +18,19 @@ const VolunteerOpportunities = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [oppsData, profileData] = await Promise.all([
+                const [oppsData, profileData, applicationsData] = await Promise.all([
                     apiFetch("/opportunities", { method: "GET" }).catch(() => []),
-                    apiFetch("/dashboard/volunteer", { method: "GET" }).catch(() => null)
+                    apiFetch("/dashboard/volunteer", { method: "GET" }).catch(() => null),
+                    apiFetch("/applications/volunteer", { method: "GET" }).catch(() => []),
                 ]);
                 setOpportunities(Array.isArray(oppsData) ? oppsData : []);
+                setAppliedOpportunityIds(
+                    Array.isArray(applicationsData)
+                        ? applicationsData.map(app => app.opportunity_id).filter(Boolean)
+                        : []
+                );
                 if (profileData?.photo_url) {
-                    setProfilePhoto(`http://localhost:8000${profileData.photo_url}`);
+                    setProfilePhoto(`${PUBLIC_BASE_URL}${profileData.photo_url}`);
                 }
             } catch (err) {
                 console.error("Failed to fetch data:", err);
@@ -52,6 +59,7 @@ const VolunteerOpportunities = () => {
                 method: "POST",
                 body: JSON.stringify({ opportunity_id: oppId, message: "" })
             });
+            setAppliedOpportunityIds(prev => prev.includes(oppId) ? prev : [...prev, oppId]);
             alert("Application submitted successfully!");
         } catch (err) {
             alert(err.message || "Failed to apply.");
@@ -238,11 +246,19 @@ const VolunteerOpportunities = () => {
                                             color: "#2563eb", fontWeight: "500", textDecoration: "none", fontSize: "14px"
                                         }}>View details &gt;</Link>
                                         {opp.status === "Open" && (
-                                            <button onClick={() => handleApply(opp._id)} style={{
-                                                padding: "8px 20px", background: "#2563eb", color: "white",
-                                                border: "none", borderRadius: "8px", fontSize: "14px",
-                                                fontWeight: "600", cursor: "pointer"
-                                            }}>Apply</button>
+                                            appliedOpportunityIds.includes(opp._id) ? (
+                                                <button style={{
+                                                    padding: "8px 20px", background: "#16a34a", color: "white",
+                                                    border: "none", borderRadius: "8px", fontSize: "14px",
+                                                    fontWeight: "600", cursor: "default"
+                                                }}>Applied</button>
+                                            ) : (
+                                                <button onClick={() => handleApply(opp._id)} style={{
+                                                    padding: "8px 20px", background: "#2563eb", color: "white",
+                                                    border: "none", borderRadius: "8px", fontSize: "14px",
+                                                    fontWeight: "600", cursor: "pointer"
+                                                }}>Apply</button>
+                                            )
                                         )}
                                     </div>
                                 </div>

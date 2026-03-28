@@ -1,6 +1,6 @@
 import { ArrowRight, Briefcase, Building2, Clock, FileCheck, Globe, Mail, MessageSquare, PlusCircle, Users } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
@@ -9,8 +9,8 @@ const NGODashboard = () => {
     const [data, setData] = useState(null);
     const [appStats, setAppStats] = useState({ applications: 0, accepted: 0, pending: 0 });
     const [recentApps, setRecentApps] = useState([]);
+    const [messageStats, setMessageStats] = useState({ conversations: 0, unread: 0 });
     const [loading, setLoading] = useState(true);
-    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchDashboard = async () => {
@@ -23,6 +23,16 @@ const NGODashboard = () => {
                 setData(responseData);
                 setAppStats(statsData);
                 if (Array.isArray(appsData)) setRecentApps(appsData.slice(0, 5));
+                try {
+                    const convos = await apiFetch("/messages/conversations", { method: "GET" });
+                    const list = Array.isArray(convos) ? convos : [];
+                    setMessageStats({
+                        conversations: list.length,
+                        unread: list.reduce((sum, item) => sum + (item.unread_count || 0), 0),
+                    });
+                } catch {
+                    setMessageStats({ conversations: 0, unread: 0 });
+                }
             } catch (error) {
                 console.error("Error fetching dashboard:", error);
             } finally {
@@ -230,6 +240,20 @@ const NGODashboard = () => {
                                         View Messages
                                     </Link>
                                 </div>
+                            </div>
+
+                            <div style={{
+                                background: "white", borderRadius: 16, padding: 20,
+                                border: "1px solid #e2e8f0",
+                                boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
+                            }}>
+                                <h4 style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 14, fontWeight: 700 }}>Messages</h4>
+                                <p style={{ margin: "0 0 6px", fontSize: 13, color: "#475569" }}>
+                                    Conversations: <strong>{messageStats.conversations}</strong>
+                                </p>
+                                <p style={{ margin: 0, fontSize: 13, color: "#94a3b8" }}>
+                                    Unread messages: {messageStats.unread}
+                                </p>
                             </div>
                         </aside>
 

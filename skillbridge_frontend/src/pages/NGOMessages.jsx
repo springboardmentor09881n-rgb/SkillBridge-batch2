@@ -1,17 +1,19 @@
 import { Building2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import ChatWorkspace from "../components/ChatWorkspace";
+import { Link, useSearchParams } from "react-router-dom";
+import ChatPage from "../components/ChatPage";
 import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
-import apiFetch from "../services/api";
+import apiFetch, { PUBLIC_BASE_URL } from "../services/api";
 
 const NGOMessages = () => {
     const [profilePhoto, setProfilePhoto] = useState("");
+    const [searchParams] = useSearchParams();
+    const selectedUserId = searchParams.get("user") || "";
 
     useEffect(() => {
         apiFetch("/dashboard/ngo", { method: "GET" })
-            .then(d => { if (d?.photo_url) setProfilePhoto(`http://localhost:8000${d.photo_url}`); })
+            .then(d => { if (d?.photo_url) setProfilePhoto(`${PUBLIC_BASE_URL}${d.photo_url}`); })
             .catch(() => {});
     }, []);
 
@@ -67,7 +69,7 @@ const NGOMessages = () => {
                             Back to Dashboard
                         </Link>
                     </div>
-                    <ChatWorkspace role="ngo" />
+                    <ChatPage role="ngo" selectedUserId={selectedUserId} />
                 </main>
             </div>
         </div>

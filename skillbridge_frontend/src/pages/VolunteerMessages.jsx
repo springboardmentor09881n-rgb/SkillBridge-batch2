@@ -1,17 +1,19 @@
 import { User } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import ChatWorkspace from "../components/ChatWorkspace";
+import { Link, useSearchParams } from "react-router-dom";
+import ChatPage from "../components/ChatPage";
 import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
-import apiFetch from "../services/api";
+import apiFetch, { PUBLIC_BASE_URL } from "../services/api";
 
 const VolunteerMessages = () => {
     const [profilePhoto, setProfilePhoto] = useState("");
+    const [searchParams] = useSearchParams();
+    const selectedUserId = searchParams.get("user") || "";
 
     useEffect(() => {
         apiFetch("/dashboard/volunteer", { method: "GET" })
-            .then(data => { if (data?.photo_url) setProfilePhoto(`http://localhost:8000${data.photo_url}`); })
+            .then(data => { if (data?.photo_url) setProfilePhoto(`${PUBLIC_BASE_URL}${data.photo_url}`); })
             .catch(() => {});
     }, []);
 
@@ -68,7 +70,7 @@ const VolunteerMessages = () => {
                         Back to Dashboard
                     </Link>
                 </div>
-                <ChatWorkspace role="volunteer" />
+                <ChatPage role="volunteer" selectedUserId={selectedUserId} />
                 </div>
             </div>
         </div>

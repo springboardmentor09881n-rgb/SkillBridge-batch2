@@ -241,11 +241,19 @@ const NGOApplications = () => {
                                                     }}><X size={14} /> Reject</button>
                                                 </>
                                             )}
-                                            <Link to="/ngo-messages" style={{
-                                                padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
-                                                background: "white", fontSize: 13, fontWeight: 500, textDecoration: "none",
-                                                display: "flex", alignItems: "center", gap: 4, color: "#374151"
-                                            }}><MessageSquare size={14} /> Message</Link>
+                                            {app.status === "accepted" ? (
+                                                <Link to={`/ngo-messages?user=${encodeURIComponent(app.volunteer_id)}`} style={{
+                                                    padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
+                                                    background: "white", fontSize: 13, fontWeight: 500, textDecoration: "none",
+                                                    display: "flex", alignItems: "center", gap: 4, color: "#374151"
+                                                }}><MessageSquare size={14} /> Message</Link>
+                                            ) : (
+                                                <span style={{
+                                                    padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
+                                                    background: "#f8fafc", fontSize: 13, fontWeight: 500,
+                                                    display: "flex", alignItems: "center", gap: 4, color: "#94a3b8"
+                                                }}><MessageSquare size={14} /> Message</span>
+                                            )}
                                         </div>
                                     </div>
                                 );
