@@ -3,13 +3,15 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
-import apiFetch from "../services/api";
+import apiFetch, { PUBLIC_BASE_URL } from "../services/api";
 
 const VolunteerDashboard = () => {
     const [profile, setProfile] = useState(null);
     const [opportunities, setOpportunities] = useState([]);
+    const [appliedOpportunityIds, setAppliedOpportunityIds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [impact, setImpact] = useState({ applications: 0, accepted: 0, pending: 0, skills: 0 });
+    const [messageStats, setMessageStats] = useState({ conversations: 0, unread: 0 });
 
     useEffect(() => {
         const fetchData = async () => {
@@ -17,13 +19,36 @@ const VolunteerDashboard = () => {
                 const profileData = await apiFetch("/dashboard/volunteer", { method: "GET" });
                 setProfile(profileData);
 
-                const oppsData = await apiFetch("/opportunities", { method: "GET" }).catch(() => []);
+                const [oppsData, applicationsData] = await Promise.all([
+                    apiFetch("/opportunities/match", { method: "GET" })
+                        .catch(() => apiFetch("/opportunities", { method: "GET" }))
+                        .catch(() => []),
+                    apiFetch("/applications/volunteer", { method: "GET" }).catch(() => []),
+                ]);
                 setOpportunities(Array.isArray(oppsData) ? oppsData.slice(0, 3) : []);
+                setAppliedOpportunityIds(
+                    Array.isArray(applicationsData)
+                        ? applicationsData.map(app => app.opportunity_id).filter(Boolean)
+                        : []
+                );
 
                 let appStats = { applications: 0, accepted: 0, pending: 0 };
                 try {
                     appStats = await apiFetch("/applications/volunteer/stats", { method: "GET" });
-                } catch (_) {}
+                } catch {
+                    appStats = { applications: 0, accepted: 0, pending: 0 };
+                }
+
+                try {
+                    const convos = await apiFetch("/messages/conversations", { method: "GET" });
+                    const list = Array.isArray(convos) ? convos : [];
+                    setMessageStats({
+                        conversations: list.length,
+                        unread: list.reduce((sum, item) => sum + (item.unread_count || 0), 0),
+                    });
+                } catch {
+                    setMessageStats({ conversations: 0, unread: 0 });
+                }
 
                 const skillsCount = Array.isArray(profileData?.skills)
                     ? profileData.skills.length
@@ -76,7 +101,7 @@ const VolunteerDashboard = () => {
     }
 
     const volunteerName = profile.name || profile.full_name || "Volunteer";
-    const profilePhoto = profile.photo_url ? `http://localhost:8000${profile.photo_url}` : "";
+    const profilePhoto = profile.photo_url ? `${PUBLIC_BASE_URL}${profile.photo_url}` : "";
 
     const impactCards = [
         { label: "Applications", value: impact.applications, icon: <Briefcase size={20} />, gradient: "linear-gradient(135deg, #eff6ff, #dbeafe)", color: "#2563eb", iconBg: "#dbeafe" },
@@ -239,7 +264,12 @@ const VolunteerDashboard = () => {
                                     <h4 style={{ fontSize: 11, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.08em", margin: 0, fontWeight: 700 }}>Messages</h4>
                                     <MessageSquare size={14} color="#94a3b8" />
                                 </div>
-                                <p style={{ fontSize: 13, color: "#94a3b8", margin: "0 0 12px" }}>No recent messages</p>
+                                <p style={{ fontSize: 13, color: "#475569", margin: "0 0 6px" }}>
+                                    Conversations: <strong>{messageStats.conversations}</strong>
+                                </p>
+                                <p style={{ fontSize: 13, color: "#94a3b8", margin: "0 0 12px" }}>
+                                    Unread messages: {messageStats.unread}
+                                </p>
                                 <Link to="/volunteer-messages" style={{
                                     display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
                                     padding: "8px 0", background: "#f8fafc", border: "1px solid #e2e8f0",
@@ -276,7 +306,7 @@ const VolunteerDashboard = () => {
                             }}>
                                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
                                     <div>
-                                        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>Latest Opportunities</h2>
+                                        <h2 style={{ fontSize: 18, fontWeight: 700, color: "#0f172a", margin: "0 0 4px" }}>Recommended Opportunities</h2>
                                         <p style={{ fontSize: 13, color: "#94a3b8", margin: 0 }}>Opportunities matching your profile</p>
                                     </div>
                                     <Link to="/volunteer-opportunities" style={{
@@ -310,14 +340,14 @@ const VolunteerDashboard = () => {
                                                             }}>{opp.status || "Open"}</span>
                                                         </div>
                                                         <p style={{ fontSize: 12, color: "#94a3b8", margin: "0 0 8px", display: "flex", alignItems: "center", gap: 4 }}>
-                                                            <MapPin size={12} /> {opp.location || "Remote"} &middot; {opp.ngo_id}
+                                                            <MapPin size={12} /> {opp.location || "Remote"} &middot; {opp.ngo_name || opp.ngo_id}
                                                         </p>
                                                     </div>
                                                 </div>
                                                 <p style={{ fontSize: 14, color: "#475569", margin: "0 0 12px", lineHeight: 1.6,
                                                     display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden"
                                                 }}>{opp.description}</p>
-                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16 }}>
                                                     <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                                                         {opp.required_skills?.slice(0, 4).map(skill => (
                                                             <span key={skill} style={{
@@ -330,12 +360,51 @@ const VolunteerDashboard = () => {
                                                             <span style={{ fontSize: 11, color: "#94a3b8", padding: "4px 6px" }}>+{opp.required_skills.length - 4} more</span>
                                                         )}
                                                     </div>
-                                                    <Link to={`/opportunity/${opp._id}`} style={{
-                                                        display: "flex", alignItems: "center", gap: 4,
-                                                        fontSize: 13, color: "#2563eb", textDecoration: "none", fontWeight: 600
-                                                    }}>
-                                                        <Eye size={14} /> View Details
-                                                    </Link>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                                        {opp.match_meta?.relevance_score > 0 && (
+                                                            <span style={{
+                                                                background: "#f0fdf4",
+                                                                color: "#15803d",
+                                                                border: "1px solid #bbf7d0",
+                                                                borderRadius: 999,
+                                                                padding: "4px 10px",
+                                                                fontSize: 11,
+                                                                fontWeight: 700
+                                                            }}>
+                                                                Match score {opp.match_meta.relevance_score}
+                                                            </span>
+                                                        )}
+                                                        {appliedOpportunityIds.includes(opp._id) ? (
+                                                            <span style={{
+                                                                display: "inline-flex",
+                                                                alignItems: "center",
+                                                                gap: 4,
+                                                                padding: "8px 12px",
+                                                                borderRadius: 8,
+                                                                background: "#16a34a",
+                                                                color: "white",
+                                                                fontSize: 13,
+                                                                fontWeight: 600
+                                                            }}>
+                                                                Applied <Eye size={14} />
+                                                            </span>
+                                                        ) : (
+                                                            <Link to={`/opportunity/${opp._id}`} style={{
+                                                                display: "inline-flex",
+                                                                alignItems: "center",
+                                                                gap: 4,
+                                                                padding: "8px 12px",
+                                                                borderRadius: 8,
+                                                                background: "#2563eb",
+                                                                color: "white",
+                                                                textDecoration: "none",
+                                                                fontSize: 13,
+                                                                fontWeight: 600
+                                                            }}>
+                                                                Apply <Eye size={14} />
+                                                            </Link>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         ))}

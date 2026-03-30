@@ -1,7 +1,26 @@
 import { Bell } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiFetch from "../services/api";
+import { getStoredRole } from "../utils/authStorage";
+
+const ONE_HOUR_AGO_ISO = new Date(new Date().getTime() - 3600 * 1000).toISOString();
+const MOCK_NOTIFICATIONS = [
+    {
+        _id: "mock-1",
+        message: "You received a new message in Website Redesign chat.",
+        is_read: false,
+        type: "message",
+        created_at: new Date().toISOString()
+    },
+    {
+        _id: "mock-2",
+        message: "A new opportunity match is available for your skills.",
+        is_read: true,
+        type: "match_suggestion",
+        created_at: ONE_HOUR_AGO_ISO
+    }
+];
 
 const NotificationBell = () => {
     const [notifications, setNotifications] = useState([]);
@@ -9,47 +28,34 @@ const NotificationBell = () => {
     const [open, setOpen] = useState(false);
     const dropdownRef = useRef(null);
     const navigate = useNavigate();
-    const mockNotifications = [
-        {
-            _id: "mock-1",
-            message: "You received a new message in Website Redesign chat.",
-            is_read: false,
-            type: "message",
-            created_at: new Date().toISOString()
-        },
-        {
-            _id: "mock-2",
-            message: "A new opportunity match is available for your skills.",
-            is_read: true,
-            type: "match_suggestion",
-            created_at: new Date(Date.now() - 3600 * 1000).toISOString()
-        }
-    ];
 
-    const fetchUnreadCount = async () => {
+    const fetchUnreadCount = useCallback(async () => {
         try {
             const data = await apiFetch("/notifications/unread-count", { method: "GET" });
             setUnreadCount(data.count);
-        } catch (e) {
-            setUnreadCount(mockNotifications.filter(n => !n.is_read).length);
+        } catch {
+            setUnreadCount(MOCK_NOTIFICATIONS.filter(n => !n.is_read).length);
         }
-    };
+    }, []);
 
-    const fetchNotifications = async () => {
+    const fetchNotifications = useCallback(async () => {
         try {
             const data = await apiFetch("/notifications/", { method: "GET" });
             setNotifications(data);
-        } catch (e) {
-            setNotifications(mockNotifications);
+        } catch {
+            setNotifications(MOCK_NOTIFICATIONS);
         }
-    };
+    }, []);
 
     useEffect(() => {
-        fetchUnreadCount();
+        const kickoff = setTimeout(() => { fetchUnreadCount(); }, 0);
         // Poll every 30 seconds
         const interval = setInterval(fetchUnreadCount, 30000);
-        return () => clearInterval(interval);
-    }, []);
+        return () => {
+            clearTimeout(kickoff);
+            clearInterval(interval);
+        };
+    }, [fetchUnreadCount]);
 
     // Close dropdown on outside click
     useEffect(() => {
@@ -96,6 +102,11 @@ const NotificationBell = () => {
             navigate("/volunteer-applications");
         } else if (notif.type === "new_application") {
             navigate("/ngo-applications");
+        } else if (notif.type === "message") {
+            const role = getStoredRole();
+            navigate(role === "NGO" ? "/ngo-messages" : "/volunteer-messages");
+        } else if (notif.type === "match_suggestion") {
+            navigate("/volunteer-dashboard");
         } else if (notif.opportunity_id) {
             navigate(`/opportunity/${notif.opportunity_id}`);
         }
