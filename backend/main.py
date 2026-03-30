@@ -7,6 +7,7 @@ from routes.opportunity import router as opportunity_router
 from routes.dashboard import router as dashboard_router
 from routes.notification import router as notification_router
 from routes.application import router as application_router
+from routes.match import router as match_router
 from routes.message import router as message_router, websocket_chat_handler
 import os
 
@@ -33,6 +34,7 @@ app.include_router(opportunity_router, prefix="/api/opportunities", tags=["Oppor
 app.include_router(dashboard_router, prefix="/api/dashboard", tags=["Dashboard"])
 app.include_router(notification_router, prefix="/api/notifications", tags=["Notifications"])
 app.include_router(application_router, prefix="/api/applications", tags=["Applications"])
+app.include_router(match_router, prefix="/match", tags=["Match"])
 app.include_router(message_router, prefix="/api/messages", tags=["Messages"])
 
 # ================== STATIC FILES ==================
