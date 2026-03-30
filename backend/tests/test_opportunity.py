@@ -305,6 +305,7 @@ def test_websocket_chat_sends_receives_and_stores_messages(client, patch_message
 
     assert sender_payload["type"] == "message"
     assert receiver_payload["content"] == "Hello from the volunteer"
+    assert sender_payload["timestamp"].endswith("+00:00")
     assert len(patch_message_collections["messages"].documents) == 1
     assert patch_message_collections["messages"].documents[0]["receiver_id"] == "ngo@example.com"
     assert patch_message_collections["notifications"].documents[0]["type"] == "message"

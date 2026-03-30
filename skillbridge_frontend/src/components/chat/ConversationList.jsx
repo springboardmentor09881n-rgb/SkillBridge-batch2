@@ -1,3 +1,5 @@
+import { formatChatTimestamp } from "./formatChatTimestamp";
+
 const ConversationList = ({ threads, activeThreadId, loading, onSelect }) => {
     return (
         <div style={{ background: "white", borderRadius: 14, border: "1px solid #e2e8f0", overflow: "hidden" }}>
@@ -27,21 +29,28 @@ const ConversationList = ({ threads, activeThreadId, loading, onSelect }) => {
                     >
                         <div style={{ display: "flex", justifyContent: "space-between", gap: 8 }}>
                             <div style={{ fontSize: 14, fontWeight: 600, color: "#0f172a" }}>{thread.display_name}</div>
-                            {thread.unread_count > 0 && (
-                                <span style={{
-                                    minWidth: 18,
-                                    height: 18,
-                                    borderRadius: "50%",
-                                    background: "#2563eb",
-                                    color: "white",
-                                    fontSize: 11,
-                                    display: "inline-flex",
-                                    alignItems: "center",
-                                    justifyContent: "center"
-                                }}>
-                                    {thread.unread_count}
-                                </span>
-                            )}
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                                {thread.last_message_at && (
+                                    <span style={{ fontSize: 11, color: "#94a3b8" }}>
+                                        {formatChatTimestamp(thread.last_message_at)}
+                                    </span>
+                                )}
+                                {thread.unread_count > 0 && (
+                                    <span style={{
+                                        minWidth: 18,
+                                        height: 18,
+                                        borderRadius: "50%",
+                                        background: "#2563eb",
+                                        color: "white",
+                                        fontSize: 11,
+                                        display: "inline-flex",
+                                        alignItems: "center",
+                                        justifyContent: "center"
+                                    }}>
+                                        {thread.unread_count}
+                                    </span>
+                                )}
+                            </div>
                         </div>
                         <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
                             {thread.last_message || (thread.chat_enabled ? "Start a conversation" : "Waiting for accepted application")}

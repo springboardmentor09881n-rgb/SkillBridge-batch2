@@ -1,4 +1,8 @@
+import { formatChatDateDivider, formatMessageTime } from "./formatChatTimestamp";
+
 const MessageBox = ({ messages, loading, userEmail }) => {
+    let previousDateLabel = "";
+
     return (
         <div style={{ flex: 1, padding: "14px 16px", display: "flex", flexDirection: "column", gap: 10, overflowY: "auto" }}>
             {loading ? (
@@ -8,21 +12,54 @@ const MessageBox = ({ messages, loading, userEmail }) => {
             ) : (
                 messages.map(message => {
                     const mine = message.sender_id === userEmail;
+                    const dateLabel = formatChatDateDivider(message.timestamp);
+                    const showDateDivider = dateLabel && dateLabel !== previousDateLabel;
+                    previousDateLabel = dateLabel || previousDateLabel;
+
                     return (
-                        <div
-                            key={message._id}
-                            style={{
-                                alignSelf: mine ? "flex-end" : "flex-start",
-                                maxWidth: "75%",
-                                background: mine ? "#2563eb" : "#f1f5f9",
-                                color: mine ? "white" : "#0f172a",
-                                borderRadius: 12,
-                                padding: "10px 12px"
-                            }}
-                        >
-                            <div style={{ fontSize: 13, lineHeight: 1.5 }}>{message.content}</div>
-                            <div style={{ fontSize: 11, opacity: 0.8, marginTop: 4 }}>
-                                {message.timestamp ? new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                        <div key={message._id} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                            {showDateDivider && (
+                                <div style={{ display: "flex", justifyContent: "center", margin: "6px 0 2px" }}>
+                                    <span
+                                        style={{
+                                            fontSize: 11,
+                                            color: "#64748b",
+                                            background: "#e2e8f0",
+                                            borderRadius: 999,
+                                            padding: "4px 10px",
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        {dateLabel}
+                                    </span>
+                                </div>
+                            )}
+                            <div
+                                style={{
+                                    alignSelf: mine ? "flex-end" : "flex-start",
+                                    maxWidth: "75%",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        background: mine ? "#2563eb" : "#f1f5f9",
+                                        color: mine ? "white" : "#0f172a",
+                                        borderRadius: 12,
+                                        padding: "10px 12px"
+                                    }}
+                                >
+                                    <div style={{ fontSize: 13, lineHeight: 1.5 }}>{message.content}</div>
+                                    <div
+                                        style={{
+                                            fontSize: 11,
+                                            opacity: 0.8,
+                                            marginTop: 4,
+                                            textAlign: mine ? "right" : "left",
+                                        }}
+                                    >
+                                        {formatMessageTime(message.timestamp)}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     );

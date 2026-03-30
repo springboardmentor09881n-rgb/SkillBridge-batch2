@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Set
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
@@ -27,10 +27,16 @@ async def _is_chat_allowed(user_a: str, user_b: str) -> bool:
     return await applications_collection.count_documents(query, limit=1) > 0
 
 
+def _serialize_datetime(value):
+    if not hasattr(value, "isoformat"):
+        return value
+    if getattr(value, "tzinfo", None) is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.isoformat()
+
+
 def _serialize_message(doc: dict) -> dict:
-    timestamp = doc.get("timestamp")
-    if hasattr(timestamp, "isoformat"):
-        timestamp = timestamp.isoformat()
+    timestamp = _serialize_datetime(doc.get("timestamp"))
     return {
         "_id": str(doc["_id"]),
         "sender_id": doc["sender_id"],
@@ -162,7 +168,7 @@ async def get_conversations(user: dict = Depends(get_current_user)):
                 or peer_id,
                 "photo_url": peer.get("photo_url", ""),
                 "last_message": last_message.get("content") if last_message else "",
-                "last_message_at": last_message.get("timestamp") if last_message else None,
+                "last_message_at": _serialize_datetime(last_message.get("timestamp")) if last_message else None,
                 "unread_count": unread_count,
                 "chat_enabled": await _is_chat_allowed(me, peer_id),
             }
@@ -275,7 +281,7 @@ async def websocket_chat_handler(websocket: WebSocket, user_id: str):
                 "sender_id": user_id,
                 "receiver_id": receiver_id,
                 "content": content,
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(timezone.utc),
                 "is_read": False,
             }
             result = await messages_collection.insert_one(new_message)
@@ -292,7 +298,7 @@ async def websocket_chat_handler(websocket: WebSocket, user_id: str):
                     "user_id": receiver_id,
                     "role": None,
                     "read_by": [],
-                    "created_at": datetime.utcnow(),
+                    "created_at": datetime.now(timezone.utc),
                 }
             )
     except WebSocketDisconnect:
