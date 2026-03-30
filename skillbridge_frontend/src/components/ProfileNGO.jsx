@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from "react";
 import "./ProfileNGO.css";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const ProfileNGO = () => {
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchUserData = async () => {
-      const user = JSON.parse(localStorage.getItem("user"));
       if (!user || !user.token) {
         navigate("/login");
         return;
@@ -26,6 +27,7 @@ const ProfileNGO = () => {
           const data = await response.json();
           setUserData(data);
         } else {
+          logout();
           navigate("/login");
         }
       } catch (error) {
@@ -36,10 +38,10 @@ const ProfileNGO = () => {
     };
 
     fetchUserData();
-  }, [navigate]);
+  }, [navigate, user, logout]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    logout();
     navigate("/login");
   };
 

@@ -15,13 +15,31 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
     const [input, setInput] = useState("");
     const [error, setError] = useState("");
     const [volunteerSuggestions, setVolunteerSuggestions] = useState([]);
+    const [ngoSuggestions, setNgoSuggestions] = useState([]);
     const wsRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
     const activeThreadIdRef = useRef("");
 
     const activeThread = useMemo(
-        () => threads.find(thread => thread.user_id === activeThreadId) || null,
-        [threads, activeThreadId]
+        () => {
+            const found = threads.find(thread => thread.user_id === activeThreadId);
+            if (found) return found;
+
+            // If not in threads, check if it's a match suggestion we want to chat with
+            const suggestion = role === "ngo"
+                ? ngoSuggestions.find(v => v.user_id === activeThreadId)
+                : volunteerSuggestions.find(v => v._id === activeThreadId);
+
+            if (suggestion) {
+                return {
+                    user_id: activeThreadId,
+                    display_name: suggestion.name,
+                    chat_enabled: true,
+                };
+            }
+            return null;
+        },
+        [threads, activeThreadId, role, ngoSuggestions, volunteerSuggestions]
     );
 
     useEffect(() => {
@@ -87,13 +105,21 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
     }, [fetchConversations]);
 
     useEffect(() => {
-        if (role !== "volunteer") return;
-        apiFetch("/opportunities/match", { method: "GET" })
-            .then(data => {
-                const list = Array.isArray(data) ? data.slice(0, 3) : [];
-                setVolunteerSuggestions(list);
-            })
-            .catch(() => setVolunteerSuggestions([]));
+        if (role === "volunteer") {
+            apiFetch("/opportunities/match", { method: "GET" })
+                .then(data => {
+                    const list = Array.isArray(data) ? data : [];
+                    setVolunteerSuggestions(list);
+                })
+                .catch(() => setVolunteerSuggestions([]));
+        } else if (role === "ngo") {
+            apiFetch("/opportunities/match-volunteers", { method: "GET" })
+                .then(data => {
+                    const list = Array.isArray(data) ? data.slice(0, 3) : [];
+                    setNgoSuggestions(list);
+                })
+                .catch(() => setNgoSuggestions([]));
+        }
     }, [role]);
 
     useEffect(() => {
@@ -214,18 +240,23 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
     };
 
     const suggestions = role === "ngo"
-        ? threads.filter(t => t.chat_enabled).slice(0, 3).map(t => ({
-            id: t.user_id,
-            name: t.display_name,
-            skillMatch: "Accepted applicant",
-            match: "Chat enabled",
+        ? ngoSuggestions.map(v => ({
+            id: v.user_id,
+            name: v.name,
+            skillMatch: (v.match_meta?.skill_matches || []).length > 0 ? v.match_meta.skill_matches.join(", ") : "Skill match available",
+            match: v.match_meta?.location_match ? "Location matched" : "Skill matched",
+            type: "volunteer_match"
         }))
-        : volunteerSuggestions.map(o => ({
-            id: o._id,
-            name: o.title,
-            skillMatch: (o.match_meta?.skill_matches || []).join(", ") || "Skill match available",
-            match: o.match_meta?.location_match ? "Location matched" : "Skill matched",
-        }));
+        : volunteerSuggestions
+            .filter(o => o.match_meta?.has_skill_match || o.match_meta?.location_match) // Filter out 0-match items
+            .slice(0, 3)
+            .map(o => ({
+                id: o._id,
+                name: o.title,
+                skillMatch: (o.match_meta?.skill_matches || []).length > 0 ? o.match_meta.skill_matches.join(", ") : "Skill match available",
+                match: o.match_meta?.location_match ? "Location matched" : "Skill matched",
+                type: "opportunity_match"
+            }));
 
     return (
         <div style={{ display: "grid", gridTemplateColumns: "280px 1fr 280px", gap: 18 }}>
@@ -271,7 +302,26 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
                             <div key={item.id} style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: 10 }}>
                                 <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{item.name}</div>
                                 <div style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>{item.skillMatch}</div>
-                                <div style={{ marginTop: 8, fontSize: 11, color: "#16a34a", fontWeight: 600 }}>{item.match}</div>
+                                <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                                    <div style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>{item.match}</div>
+                                    <button
+                                        onClick={() => {
+                                            if (item.type === "volunteer_match") {
+                                                // Start/Switch to chat
+                                                setActiveThreadId(item.id);
+                                            } else {
+                                                // Navigate to opportunity
+                                                window.location.href = `/opportunity/${item.id}`;
+                                            }
+                                        }}
+                                        style={{
+                                            background: "none", border: "none", color: "#7c3aed",
+                                            fontSize: 11, fontWeight: 700, cursor: "pointer", padding: 0
+                                        }}
+                                    >
+                                        {item.type === "volunteer_match" ? "Message →" : "View →"}
+                                    </button>
+                                </div>
                             </div>
                         ))
                     )}

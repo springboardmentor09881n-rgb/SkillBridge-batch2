@@ -17,6 +17,7 @@ async def _user_exists(user_id: str) -> bool:
 
 
 async def _is_chat_allowed(user_a: str, user_b: str) -> bool:
+    # 1. Accepted application (Legacy)
     query = {
         "status": "accepted",
         "$or": [
@@ -24,7 +25,21 @@ async def _is_chat_allowed(user_a: str, user_b: str) -> bool:
             {"volunteer_id": user_b, "ngo_id": user_a},
         ],
     }
-    return await applications_collection.count_documents(query, limit=1) > 0
+    if await applications_collection.count_documents(query, limit=1) > 0:
+        return True
+
+    # 2. Recruitment: Allow NGOs and Volunteers to message each other (Milestone 4 outreach)
+    a_role = await users_collection.find_one({"email": user_a}, {"role": 1})
+    b_role = await users_collection.find_one({"email": user_b}, {"role": 1})
+    
+    if a_role and b_role:
+        role_a = a_role.get("role")
+        role_b = b_role.get("role")
+        # Allow cross-role communication (NGO <> Volunteer)
+        if (role_a == "NGO" and role_b == "Volunteer") or (role_a == "Volunteer" and role_b == "NGO"):
+            return True
+
+    return False
 
 
 def _serialize_message(doc: dict) -> dict:

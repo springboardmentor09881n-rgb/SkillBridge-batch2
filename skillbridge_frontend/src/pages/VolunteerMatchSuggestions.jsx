@@ -37,7 +37,7 @@ const VolunteerMatchSuggestions = () => {
                 setProfile(profileData);
 
                 setLoadingMatches(true);
-                const matchData = await apiFetch("/opportunities/matches", { method: "GET" }).catch(() => []);
+                const matchData = await apiFetch("/opportunities/match", { method: "GET" }).catch(() => []);
                 setMatches(Array.isArray(matchData) ? matchData : []);
             } catch (err) {
                 console.error("Error fetching matches:", err);

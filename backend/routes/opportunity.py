@@ -193,6 +193,73 @@ async def get_matched_opportunities(user: dict = Depends(get_current_user)):
     return scored
 
 
+# NGO: GET MATCHED VOLUNTEERS
+@router.get("/match-volunteers")
+async def get_matched_volunteers(user: dict = Depends(get_current_user)):
+    if user["role"] != "NGO":
+        raise HTTPException(status_code=403, detail="Only NGOs can access this endpoint")
+
+    # 1. Get NGO's open opportunities
+    ngo_opps = await opportunities_collection.find({
+        "ngo_id": user["user_id"],
+        "status": {"$ne": "Closed"}
+    }).to_list(length=100)
+
+    if not ngo_opps:
+        return []
+
+    # 2. Get all volunteers
+    volunteers = await users_collection.find({"role": "Volunteer"}).to_list(length=1000)
+
+    scored_volunteers = []
+    
+    for vol in volunteers:
+        vol_skills = {_norm(s) for s in _normalize_list(vol.get("skills", []))}
+        vol_location = _norm(vol.get("location", ""))
+        
+        matches_found = []
+        max_score = 0
+        has_any_match = False
+        
+        for opp in ngo_opps:
+            req_skills = {_norm(s) for s in _normalize_list(opp.get("required_skills", []))}
+            skill_matches = sorted(req_skills.intersection(vol_skills))
+            loc_match = bool(vol_location) and _norm(opp.get("location", "")) == vol_location
+            
+            score = (len(skill_matches) * 10) + (5 if loc_match else 0)
+            
+            if score > 0:
+                has_any_match = True
+                matches_found.append({
+                    "opportunity_title": opp.get("title"),
+                    "skill_matches": skill_matches,
+                    "location_match": loc_match,
+                    "score": score
+                })
+                if score > max_score:
+                    max_score = score
+        
+        if has_any_match:
+            scored_volunteers.append({
+                "user_id": vol.get("email"),
+                "name": vol.get("full_name") or vol.get("name") or vol.get("username") or "Volunteer",
+                "email": vol.get("email"),
+                "skills": vol.get("skills"),
+                "location": vol.get("location"),
+                "max_score": max_score,
+                "matches": matches_found[:3],
+                "match_meta": {
+                    "has_skill_match": any(m["skill_matches"] for m in matches_found),
+                    "location_match": any(m["location_match"] for m in matches_found),
+                    "skill_matches": list(set().union(*(m["skill_matches"] for m in matches_found)))
+                }
+            })
+
+    # Sort by max score
+    scored_volunteers.sort(key=lambda x: x["max_score"], reverse=True)
+    return scored_volunteers[:10]
+
+
 # GET OPPORTUNITY BY ID
 @router.get("/{opportunity_id}")
 async def get_opportunity_by_id(opportunity_id: str):
