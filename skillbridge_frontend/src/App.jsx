@@ -22,6 +22,7 @@ import VolunteerApplications from "./pages/VolunteerApplications";
 import VolunteerDashboard from "./pages/VolunteerDashboard";
 import VolunteerMessages from "./pages/VolunteerMessages";
 import VolunteerOpportunities from "./pages/VolunteerOpportunities";
+import VolunteerMatchSuggestions from "./pages/VolunteerMatchSuggestions";
 
 
 const App = () => {
@@ -56,6 +57,14 @@ const App = () => {
           <Route
             path="/volunteer-messages"
             element={<ProtectedRoute allowedRoles={["Volunteer"]}><VolunteerMessages /></ProtectedRoute>}
+          />
+          <Route
+            path="/volunteer-matches"
+            element={
+              <ProtectedRoute allowedRoles={["Volunteer"]}>
+                <VolunteerMatchSuggestions />
+              </ProtectedRoute>
+            }
           />
           <Route
             path="/opportunity/:id"
