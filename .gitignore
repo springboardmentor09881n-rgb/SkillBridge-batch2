@@ -41,3 +41,14 @@ Thumbs.db
 # Uploads (user-uploaded files)
 # =========================
 backend/uploads/
+
+
+# Python cache
+__pycache__/
+.pytest_cache/
+
+# pytest temp files
+pytest-cache-files-*
+
+# Python compiled files
+*.pyc

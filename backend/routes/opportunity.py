@@ -8,6 +8,18 @@ from datetime import datetime
 router = APIRouter()
 
 
+def _normalize_list(value):
+    if isinstance(value, list):
+        return [str(v).strip() for v in value if str(v).strip()]
+    if isinstance(value, str):
+        return [v.strip() for v in value.split(",") if v.strip()]
+    return []
+
+
+def _norm(text: str) -> str:
+    return (text or "").strip().lower()
+
+
 # CREATE OPPORTUNITY
 @router.post("/")
 async def create_opportunity(opportunity: OpportunityCreate, user: dict = Depends(get_current_user)):
@@ -91,6 +103,94 @@ async def get_all_opportunities(
         opp["_id"] = str(opp["_id"])
 
     return opportunities
+
+
+# VOLUNTEER: GET MATCHED OPPORTUNITIES
+@router.get("/match")
+async def get_matched_opportunities(user: dict = Depends(get_current_user)):
+    if user["role"] != "Volunteer":
+        raise HTTPException(status_code=403, detail="Only volunteers can access this endpoint")
+
+    volunteer = await users_collection.find_one({"email": user["user_id"]})
+    if not volunteer:
+        raise HTTPException(status_code=404, detail="Volunteer not found")
+
+    volunteer_skills = {_norm(s) for s in _normalize_list(volunteer.get("skills", []))}
+    volunteer_location = _norm(volunteer.get("location", ""))
+
+    open_opportunities = await opportunities_collection.find({"status": {"$ne": "Closed"}}).to_list(length=500)
+    ngo_ids = {opp.get("ngo_id") for opp in open_opportunities if opp.get("ngo_id")}
+    ngo_users = await users_collection.find(
+        {"email": {"$in": list(ngo_ids)}},
+        {"email": 1, "organization_name": 1, "name": 1, "full_name": 1, "username": 1},
+    ).to_list(length=len(ngo_ids) or 1)
+    ngo_map = {ngo["email"]: ngo for ngo in ngo_users}
+    scored = []
+    match_notifications = []
+
+    for opp in open_opportunities:
+        required_skills = _normalize_list(opp.get("required_skills", []))
+        required_skills_norm = {_norm(s) for s in required_skills}
+        skill_matches = sorted(required_skills_norm.intersection(volunteer_skills))
+        location_match = bool(volunteer_location) and _norm(opp.get("location", "")) == volunteer_location
+        has_skill_match = len(skill_matches) > 0
+        relevance_score = (len(skill_matches) * 10) + (5 if location_match else 0)
+        ngo = ngo_map.get(opp.get("ngo_id"), {})
+
+        opp["_id"] = str(opp["_id"])
+        opp["ngo_name"] = (
+            ngo.get("organization_name")
+            or ngo.get("name")
+            or ngo.get("full_name")
+            or ngo.get("username")
+            or opp.get("ngo_id")
+            or "NGO"
+        )
+        opp["match_meta"] = {
+            "skill_matches": skill_matches,
+            "has_skill_match": has_skill_match,
+            "location_match": location_match,
+            "relevance_score": relevance_score,
+        }
+        scored.append(opp)
+
+        if has_skill_match:
+            match_notifications.append(
+                {
+                    "type": "match_suggestion",
+                    "message": f"New match found: {opp.get('title', 'Opportunity')}",
+                    "opportunity_id": opp["_id"],
+                    "user_id": user["user_id"],
+                    "role": "Volunteer",
+                    "read_by": [],
+                    "created_at": datetime.utcnow(),
+                }
+            )
+
+    scored.sort(
+        key=lambda item: (
+            item["match_meta"]["has_skill_match"],
+            item["match_meta"]["location_match"],
+            item["match_meta"]["relevance_score"],
+            item.get("created_at", datetime.min),
+        ),
+        reverse=True,
+    )
+
+    # Upsert-like insert: add only unseen match notifications for this user/opportunity.
+    for notif in match_notifications[:5]:
+        exists = await notifications_collection.count_documents(
+            {
+                "type": "match_suggestion",
+                "user_id": user["user_id"],
+                "opportunity_id": notif["opportunity_id"],
+            },
+            limit=1,
+        )
+        if not exists:
+            await notifications_collection.insert_one(notif)
+
+    return scored
 
 
 # GET OPPORTUNITY BY ID

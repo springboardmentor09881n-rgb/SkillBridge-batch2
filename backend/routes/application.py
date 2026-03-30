@@ -175,9 +175,13 @@ async def update_application_status(
     opp = await opportunities_collection.find_one({"_id": ObjectId(app["opportunity_id"])})
     opp_title = opp.get("title", "an opportunity") if opp else "an opportunity"
 
+    status_message = f"Your application for '{opp_title}' was {status_update.status}"
+    if status_update.status == "accepted":
+        status_message += ". You can now start a chat with the NGO."
+
     await notifications_collection.insert_one({
         "type": "application_status",
-        "message": f"Your application for '{opp_title}' was {status_update.status}",
+        "message": status_message,
         "opportunity_id": app["opportunity_id"],
         "user_id": app["volunteer_id"],
         "role": "Volunteer",

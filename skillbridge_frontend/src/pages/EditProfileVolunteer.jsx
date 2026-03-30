@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
+import { getStoredToken } from "../utils/authStorage";
 
 const EditProfileVolunteer = () => {
     const navigate = useNavigate();
@@ -88,7 +89,7 @@ const EditProfileVolunteer = () => {
         setMessage("");
         setUploading(true);
         try {
-            const token = localStorage.getItem("access_token");
+            const token = getStoredToken();
 
             if (pendingPhotoFile) {
                 const fd = new FormData();

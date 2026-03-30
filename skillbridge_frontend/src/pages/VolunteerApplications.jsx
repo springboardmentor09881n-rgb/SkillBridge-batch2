@@ -136,9 +136,16 @@ const VolunteerApplications = () => {
                                         }}>{app.message}</div>
                                     )}
                                     {opp && (
-                                        <Link to={`/opportunity/${app.opportunity_id}`} style={{ color: "#2563eb", fontSize: "14px", marginTop: "8px", display: "inline-block" }}>
-                                            View opportunity details
-                                        </Link>
+                                        <div style={{ display: "flex", gap: 16, alignItems: "center", marginTop: 8 }}>
+                                            <Link to={`/opportunity/${app.opportunity_id}`} style={{ color: "#2563eb", fontSize: "14px", display: "inline-block" }}>
+                                                View opportunity details
+                                            </Link>
+                                            {app.status === "accepted" && (
+                                                <Link to={`/volunteer-messages?user=${encodeURIComponent(app.ngo_id)}`} style={{ color: "#16a34a", fontSize: "14px", display: "inline-block", textDecoration: "none", fontWeight: 600 }}>
+                                                    Message NGO
+                                                </Link>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             );
