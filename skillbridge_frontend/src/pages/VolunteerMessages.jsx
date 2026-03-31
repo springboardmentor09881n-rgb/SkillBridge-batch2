@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import ChatPage from "../components/ChatPage";
 import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 import apiFetch, { PUBLIC_BASE_URL } from "../services/api";
 
 const VolunteerMessages = () => {
@@ -18,60 +19,24 @@ const VolunteerMessages = () => {
     }, []);
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+        <div className="layout-wrapper">
             <Sidebar />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                {/* Top Navigation Bar */}
-                <header style={{
-                    background: "white",
-                    padding: "14px 32px",
-                    borderBottom: "1px solid #e2e8f0",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between"
-                }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>SkillBridge</h1>
-                    <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        {[
-                            { to: "/volunteer-dashboard", label: "Dashboard" },
-                            { to: "/volunteer-opportunities", label: "Opportunities" },
-                            { to: "/volunteer-applications", label: "Applications" },
-                            { to: "/volunteer-messages", label: "Messages", active: true }
-                        ].map(link => (
-                            <Link key={link.label} to={link.to} style={{
-                                textDecoration: "none", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 500,
-                                color: link.active ? "#2563eb" : "#64748b",
-                                background: link.active ? "#eff6ff" : "transparent",
-                                transition: "all 0.2s"
-                            }}>{link.label}</Link>
-                        ))}
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
-                            <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>Volunteer</span>
-                            <NotificationBell />
-                            <Link to="/edit-profile-volunteer" title="Open profile" style={{ textDecoration: "none" }}>
-                                <div style={{
-                                    width: 36, height: 36, borderRadius: "50%",
-                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
-                                }}>
-                                    {!profilePhoto && <User size={18} color="#94a3b8" />}
-                                </div>
-                            </Link>
-                        </div>
-                    </nav>
-                </header>
+            <div className="main-container">
+                <Header 
+                    role="Volunteer" 
+                    profilePhoto={profilePhoto} 
+                    activePage="messages" 
+                />
 
-                <div style={{ padding: "28px 32px" }}>
-                <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1a1a1a", marginBottom: "8px" }}>Messages</h2>
-                <p style={{ fontSize: "16px", color: "#6b7280", marginBottom: "20px" }}>Send and receive updates from NGOs in real-time style UI.</p>
-                <div style={{ marginBottom: 16 }}>
-                    <Link to="/volunteer-dashboard" style={{ color: "#2563eb", fontSize: "14px", display: "inline-block", textDecoration: "none", fontWeight: 600 }}>
-                        Back to Dashboard
-                    </Link>
-                </div>
-                <ChatPage role="volunteer" selectedUserId={selectedUserId} />
-                </div>
+                <main className="content-inner">
+
+                    <header style={{ marginBottom: "28px" }}>
+                        <h2 style={{ fontSize: "28px", fontWeight: "800", color: "#0f172a", margin: "0 0 4px", letterSpacing: "-0.02em" }}>Messages</h2>
+                        <p style={{ fontSize: "16px", color: "#64748b", margin: 0 }}>Send and receive updates from NGOs in real-time.</p>
+                    </header>
+                    
+                    <ChatPage role="volunteer" selectedUserId={selectedUserId} />
+                </main>
             </div>
         </div>
     );

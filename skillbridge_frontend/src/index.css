@@ -1,26 +1,283 @@
 @import "tailwindcss";
 
 :root {
+  /* Signature Brand Colors */
+  --color-volunteer: #2563eb;
+  --color-volunteer-soft: #eff6ff;
+  --color-ngo: #16a34a;
+  --color-ngo-soft: #f0fdf4;
+  
+  /* Neutral Palette */
+  --bg-primary: #f0f4f8;
+  --bg-white: #ffffff;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  --border-common: #e2e8f0;
+
+  /* Elevation */
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+
+  /* Layout Constants */
+  --sidebar-width: 250px;
+  --header-height: 64px;
+
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
-  color: #213547;
-  background-color: #ffffff;
-
-  font-synthesis: none;
+  color: var(--text-main);
+  background-color: var(--bg-primary);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   margin: 0;
-  color: #213547;
-  background-color: #ffffff;
+  color: var(--text-main);
+  background-color: var(--bg-primary);
 }
 
-input,
-select,
-textarea {
+/* Base Layout Helpers */
+.layout-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+.main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-left: var(--sidebar-width);
+  transition: margin-left 0.3s ease;
+}
+
+.content-inner {
+  flex: 1;
+  padding: 28px 32px;
+  overflow-y: auto;
+}
+
+/* Global Responsive Adjustments */
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 0px;
+  }
+  
+  .main-container {
+    margin-left: 0;
+  }
+  
+  .content-inner {
+    padding: 20px 16px;
+  }
+}
+
+input, select, textarea {
   color: #111827;
+}
+
+/* Micro-animations */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════════════════════════
+   GLOBAL BUTTON SYSTEM
+   ═══════════════════════════════════════════════ */
+
+/* Primary action button — filled, vibrant */
+.action-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  color: white;
+  background: var(--color-volunteer);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.action-btn-primary:hover {
+  background: #1d4ed8;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  transform: translateY(-1px);
+}
+
+.action-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: none;
+}
+
+.action-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Secondary / outline button */
+.action-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-volunteer);
+  background: var(--color-volunteer-soft);
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.action-btn-secondary:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
+/* Text-style button — looks like a link but behaves as a button */
+.text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--text-muted);
+  background: transparent;
+  border: 1px solid var(--border-common);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.text-btn:hover {
+  background: #f1f5f9;
+  color: var(--text-main);
+  border-color: #cbd5e1;
+}
+
+/* Link-button — text with underline on hover, for inline actions */
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--color-volunteer);
+  background: var(--color-volunteer-soft);
+  border: 1px solid #bfdbfe;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.link-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  transform: translateY(-1px);
+}
+
+/* Green variant for NGO / success links */
+.link-btn.green {
+  color: #16a34a;
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+
+.link-btn.green:hover {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+/* Danger variant for destructive actions */
+.text-btn.danger {
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.text-btn.danger:hover {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+/* Applied badge — not a button, just a status indicator */
+.applied-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 10px;
+}
+
+/* Stats card styling for impact grids */
+.stats-card {
+  border-radius: 14px;
+  padding: 20px;
+  border: 1px solid var(--border-common);
+  text-align: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stats-card-value {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.stats-card-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* Profile sidebar */
+.profile-aside-sticky {
+  position: sticky;
+  top: 96px;
+}
+
+@media (max-width: 1024px) {
+  .profile-aside-sticky {
+    position: static;
+  }
 }

@@ -1,0 +1,118 @@
+.main-header {
+  height: var(--header-height);
+  background: white;
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border-common);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.brand-logo {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.nav-item {
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition: all 0.2s;
+}
+
+.nav-item:hover {
+  background: #f8fafc;
+  color: var(--text-main);
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: 12px;
+  padding-left: 16px;
+  border-left: 1.5px solid var(--border-common);
+}
+
+.role-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.03em;
+}
+
+.profile-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 2px solid var(--border-common);
+  transition: transform 0.2s;
+}
+
+.profile-avatar:hover {
+  transform: scale(1.05);
+}
+
+.mobile-menu-toggle {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+/* Responsive Overrides */
+@media (max-width: 1024px) {
+  .main-header {
+    padding: 0 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main-header {
+    padding: 0 16px;
+  }
+  
+  .desktop-nav {
+    display: none; /* We'll use the mobile sidebar nav instead */
+  }
+
+  .header-actions {
+    display: flex; /* We can show some actions if needed, or hide */
+    margin-left: 0;
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}

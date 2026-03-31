@@ -14,7 +14,9 @@ import {
     Mail,
     Globe,
     ArrowRight,
-    ChevronRight
+    ChevronRight,
+    Heart,
+    Star
 } from "lucide-react";
 
 const LandingPage = () => {
@@ -32,54 +34,58 @@ const LandingPage = () => {
 
     const navLinks = [
         { name: "Home", href: "#" },
-        { name: "About", href: "#how-it-works" },
+        { name: "About", href: "#about" },
         { name: "How It Works", href: "#how-it-works" },
         { name: "Contact", href: "#footer" },
     ];
 
     return (
-        <div className="min-h-screen bg-gray-50 font-sans text-gray-900 scroll-smooth">
+        <div className="min-h-screen bg-white font-sans text-[#1e293b] scroll-smooth selection:bg-blue-100 selection:text-blue-700">
             {/* 1. Navbar */}
             <nav
-                className={`fixed top-0 w-full z-50 transition-all duration-300 ${scrolled ? "bg-white/80 backdrop-blur-md shadow-md py-2 sm:py-3" : "bg-transparent py-3 sm:py-5"
+                className={`fixed top-0 w-full z-50 transition-all duration-500 ${scrolled ? "bg-white/80 backdrop-blur-xl border-b border-slate-200/60 py-3" : "bg-transparent py-6"
                     }`}
             >
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div className="flex justify-between items-center">
-                        <Link to="/" className="flex items-center gap-2">
-                            <span className="font-bold text-2xl text-blue-600">SkillBridge</span>
+                        <Link to="/" className="flex items-center gap-2 group">
+                            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200 group-hover:scale-110 transition-transform duration-300">
+                                <Zap size={22} className="text-white fill-current" />
+                            </div>
+                            <span className="font-black text-2xl tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">SkillBridge</span>
                         </Link>
 
                         {/* Desktop Links */}
-                        <div className="hidden md:flex items-center space-x-4 lg:space-x-8">
+                        <div className="hidden md:flex items-center space-x-10">
                             {navLinks.map((link) => (
                                 <a
                                     key={link.name}
                                     href={link.href}
-                                    className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors whitespace-nowrap"
+                                    className="text-[15px] font-semibold text-slate-600 hover:text-blue-600 transition-all relative group"
                                 >
                                     {link.name}
+                                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
                                 </a>
                             ))}
-                            <div className="flex items-center space-x-3 ml-2 lg:ml-4">
+                            <div className="flex items-center space-x-4 pl-6 border-l border-slate-200">
                                 {user ? (
                                     <Link
-                                        to={user.role === 'NGO' || user.role === 'ngo' ? '/ngo-dashboard' : '/volunteer-dashboard'}
-                                        className="px-6 py-2 text-sm font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md shadow-blue-200 transition-all whitespace-nowrap"
+                                        to={user.role === 'NGO' ? '/ngo-dashboard' : '/volunteer-dashboard'}
+                                        className="px-6 py-2.5 text-sm font-bold text-white bg-blue-600 rounded-xl hover:bg-blue-700 shadow-xl shadow-blue-200 flex items-center gap-2 transition-all active:scale-95"
                                     >
-                                        Go to Dashboard
+                                        Dashboard <ArrowRight size={16} />
                                     </Link>
                                 ) : (
                                     <>
                                         <Link
                                             to="/login"
-                                            className="px-3 lg:px-4 py-1.5 lg:py-2 text-sm font-semibold text-blue-600 border border-blue-600 rounded-lg hover:bg-blue-50 transition-all whitespace-nowrap"
+                                            className="px-5 py-2.5 text-[15px] font-bold text-slate-700 hover:text-blue-600 transition-all"
                                         >
                                             Login
                                         </Link>
                                         <Link
                                             to="/register"
-                                            className="px-3 lg:px-4 py-1.5 lg:py-2 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 shadow-md shadow-blue-200 transition-all whitespace-nowrap"
+                                            className="px-6 py-2.5 text-[15px] font-bold text-white bg-slate-900 rounded-xl hover:bg-blue-600 shadow-lg shadow-slate-200 transition-all active:scale-95"
                                         >
                                             Get Started
                                         </Link>
@@ -90,63 +96,60 @@ const LandingPage = () => {
 
                         {/* Mobile Menu Button */}
                         <div className="md:hidden">
-                            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="text-gray-600 p-2">
+                            <button 
+                                onClick={() => setIsMenuOpen(!isMenuOpen)} 
+                                className="p-2.5 bg-slate-100 rounded-xl text-slate-600 active:scale-90 transition-all"
+                            >
                                 {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
                             </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Mobile Sidebar */}
+                {/* Mobile Overly Menu */}
                 <AnimatePresence>
                     {isMenuOpen && (
                         <motion.div
-                            initial={{ opacity: 0, x: "100%" }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: "100%" }}
-                            transition={{ type: "tween", duration: 0.3 }}
-                            className="fixed inset-0 top-0 left-0 z-40 md:hidden bg-white w-full overflow-y-auto"
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            className="absolute top-full left-0 w-full bg-white border-b border-slate-200 p-6 md:hidden shadow-2xl"
                         >
-                            <div className="flex justify-end p-4">
-                                <button onClick={() => setIsMenuOpen(false)} className="p-2">
-                                    <X size={28} className="text-gray-600" />
-                                </button>
-                            </div>
-                            <div className="flex flex-col space-y-6 px-6 pb-8">
+                            <div className="flex flex-col space-y-4">
                                 {navLinks.map((link) => (
                                     <a
                                         key={link.name}
                                         href={link.href}
                                         onClick={() => setIsMenuOpen(false)}
-                                        className="text-xl font-semibold text-gray-800 py-2 border-b border-gray-100"
+                                        className="text-lg font-bold text-slate-800 p-2 hover:bg-slate-50 rounded-lg transition-all"
                                     >
                                         {link.name}
                                     </a>
                                 ))}
-                                <div className="flex flex-col space-y-4 pt-6 mt-4 border-t border-gray-200">
+                                <div className="pt-4 mt-2 border-t border-slate-100 grid grid-cols-2 gap-4">
                                     {user ? (
                                         <Link
-                                            to={user.role === 'NGO' || user.role === 'ngo' ? '/ngo-dashboard' : '/volunteer-dashboard'}
+                                            to={user.role === 'NGO' ? '/ngo-dashboard' : '/volunteer-dashboard'}
                                             onClick={() => setIsMenuOpen(false)}
-                                            className="w-full py-3 text-center text-lg font-bold text-white bg-blue-600 rounded-xl shadow-lg"
+                                            className="col-span-2 py-4 text-center text-lg font-bold text-white bg-blue-600 rounded-2xl shadow-xl shadow-blue-100"
                                         >
-                                            Go to Dashboard
+                                            Dashboard
                                         </Link>
                                     ) : (
                                         <>
                                             <Link
                                                 to="/login"
                                                 onClick={() => setIsMenuOpen(false)}
-                                                className="w-full py-3 text-center text-lg font-bold text-blue-600 border border-blue-600 rounded-xl"
+                                                className="py-4 text-center text-lg font-bold text-slate-700 bg-slate-50 rounded-2xl"
                                             >
                                                 Login
                                             </Link>
                                             <Link
                                                 to="/register"
                                                 onClick={() => setIsMenuOpen(false)}
-                                                className="w-full py-3 text-center text-lg font-bold text-white bg-blue-600 rounded-xl shadow-lg"
+                                                className="py-4 text-center text-lg font-bold text-white bg-blue-600 rounded-2xl shadow-xl shadow-blue-100"
                                             >
-                                                Get Started
+                                                Register
                                             </Link>
                                         </>
                                     )}
@@ -158,280 +161,309 @@ const LandingPage = () => {
             </nav>
 
             {/* 2. Hero Section */}
-            <section className="relative pt-24 sm:pt-32 lg:pt-48 pb-16 sm:pb-20 lg:pb-32 overflow-hidden bg-gradient-to-br from-blue-50 via-white to-gray-50">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                    <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-                        <motion.div
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.8 }}
-                            className="text-center lg:text-left"
-                        >
-                            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-gray-900 leading-tight mb-4 sm:mb-6">
-                                Bridging Skills with <span className="text-blue-600">Purpose</span>
-                            </h1>
-                            <p className="text-base sm:text-lg md:text-xl text-gray-600 mb-6 sm:mb-8 lg:mb-10 max-w-xl mx-auto lg:mx-0 leading-relaxed">
-                                Connect volunteers with NGOs and create real-world impact. Unlock your potential and contribute to projects that matter.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
-                                <Link to="/register" className="px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white font-bold rounded-xl text-base sm:text-lg hover:bg-blue-700 shadow-xl shadow-blue-200 transition-all flex items-center justify-center gap-2">
-                                    Get Started <ArrowRight size={18} className="sm:w-5 sm:h-5" />
+            <section className="relative pt-32 pb-20 lg:pt-56 lg:pb-40 overflow-hidden">
+                {/* Background Decor */}
+                <div className="absolute top-0 left-0 w-full h-full -z-10 pointer-events-none">
+                    <div className="absolute top-[-10%] right-[-10%] w-[50%] aspect-square bg-blue-50/50 rounded-full blur-[120px]"></div>
+                    <div className="absolute bottom-[-10%] left-[-10%] w-[50%] aspect-square bg-indigo-50/50 rounded-full blur-[120px]"></div>
+                </div>
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
+                        <div className="flex-1 text-center lg:text-left">
+                            <motion.div
+                                initial={{ opacity: 0, x: -20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ duration: 0.6 }}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-blue-700 text-sm font-bold mb-8"
+                            >
+                                <Star size={16} className="fill-current" />
+                                <span>The #1 Platform for Social Impact</span>
+                            </motion.div>
+                            
+                            <motion.h1
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.1 }}
+                                className="text-4xl sm:text-5xl md:text-6xl xl:text-7xl font-black text-slate-900 leading-[1.1] mb-8 tracking-tight"
+                            >
+                                Bridging Skills with <span className="text-blue-600 relative inline-block">Purpose <div className="absolute -bottom-2 left-0 w-full h-3 bg-blue-100 -z-10 rounded-full"></div></span>
+                            </motion.h1>
+                            
+                            <motion.p
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.2 }}
+                                className="text-lg sm:text-xl text-slate-600 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium"
+                            >
+                                Connect with inspiring NGOs and contribute your professional expertise to projects that truly matter. Transform communities while growing your own potential.
+                            </motion.p>
+                            
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.8, delay: 0.3 }}
+                                className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start"
+                            >
+                                <Link to="/register" className="group px-8 py-5 bg-blue-600 text-white font-black rounded-2xl text-lg hover:bg-blue-700 shadow-[0_20px_50px_rgba(37,99,235,0.3)] transition-all flex items-center justify-center gap-3 active:scale-95">
+                                    Join as Volunteer <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
                                 </Link>
                                 <Link
                                     to="/login"
-                                    className="px-6 sm:px-8 py-3 sm:py-4 bg-white text-gray-800 font-bold border border-gray-200 rounded-xl text-base sm:text-lg hover:bg-gray-50 transition-all flex items-center justify-center gap-2"
+                                    className="px-8 py-5 bg-white text-slate-900 font-bold border-2 border-slate-100 rounded-2xl text-lg hover:border-slate-200 transition-all flex items-center justify-center gap-2 active:scale-95"
                                 >
-                                    Login to Account <ChevronRight size={18} className="sm:w-5 sm:h-5" />
+                                    Login to Account
                                 </Link>
-                            </div>
-                        </motion.div>
+                            </motion.div>
+
+                            <motion.div 
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 1 }}
+                                className="mt-12 flex items-center justify-center lg:justify-start gap-3 sm:gap-6"
+                            >
+                                <div className="flex -space-x-3">
+                                    {[1, 2, 3, 4].map(i => (
+                                        <div key={i} className="w-10 h-10 rounded-full border-2 border-white bg-slate-200 overflow-hidden">
+                                            <img src={`https://i.pravatar.cc/100?img=${i + 10}`} alt="User" />
+                                        </div>
+                                    ))}
+                                </div>
+                                <div className="text-sm font-bold text-slate-500">
+                                    <span className="text-slate-900">500+ professionals</span> already joined
+                                </div>
+                            </motion.div>
+                        </div>
 
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
+                            initial={{ opacity: 0, scale: 0.8 }}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 1, delay: 0.2 }}
-                            className="relative mt-8 lg:mt-0 max-w-md mx-auto lg:max-w-none"
+                            className="flex-1 relative w-full max-w-2xl"
                         >
-                            <div className="w-full aspect-square bg-gradient-to-tr from-blue-100 to-indigo-100 rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl relative">
-                                <div className="absolute inset-0 flex items-center justify-center opacity-40">
-                                    <Users size={120} className="sm:w-[150px] sm:h-[150px] lg:w-[200px] lg:h-[200px] text-blue-600" />
-                                </div>
-                                {/* Visual elements representing volunteering */}
-                                <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 bg-white/60 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg p-3 sm:p-4 lg:p-6 animate-float">
-                                    <div className="flex items-center gap-2 sm:gap-3 lg:gap-4 mb-2 sm:mb-3 lg:mb-4">
-                                        <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm lg:text-base">SB</div>
-                                        <div className="flex-1">
-                                            <div className="h-1.5 sm:h-2 w-16 sm:w-20 lg:w-24 bg-gray-200 rounded animate-pulse mb-1 sm:mb-2"></div>
-                                            <div className="h-1.5 sm:h-2 w-12 sm:w-14 lg:w-16 bg-gray-100 rounded animate-pulse"></div>
+                            <div className="relative group perspective-1000">
+                                <div className="relative z-10 w-full aspect-[4/3] bg-gradient-to-tr from-slate-900 to-slate-800 rounded-[2.5rem] shadow-[0_50px_100px_rgba(15,23,42,0.3)] overflow-hidden border border-slate-700/50">
+                                    <div className="absolute top-0 left-0 w-full h-full opacity-30 flex items-center justify-center">
+                                        <Users size={120} className="text-blue-500" />
+                                    </div>
+                                    
+                                    {/* Abstract Interface elements */}
+                                    <div className="absolute top-10 left-10 right-10 bg-white/5 backdrop-blur-md rounded-2xl p-6 border border-white/10 animate-float">
+                                        <div className="flex items-center gap-4 mb-6">
+                                            <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">SB</div>
+                                            <div className="flex-1">
+                                                <div className="h-2 w-32 bg-slate-500/50 rounded-full mb-2"></div>
+                                                <div className="h-2 w-20 bg-slate-600/30 rounded-full"></div>
+                                            </div>
+                                        </div>
+                                        <div className="space-y-3">
+                                            <div className="h-2.5 w-full bg-slate-600/40 rounded-full"></div>
+                                            <div className="h-2.5 w-full bg-slate-600/40 rounded-full"></div>
+                                            <div className="h-2.5 w-2/3 bg-slate-700/20 rounded-full"></div>
+                                        </div>
+                                        <div className="mt-8 flex justify-end">
+                                            <div className="px-6 py-2 bg-blue-600 rounded-lg text-xs font-bold text-white shadow-xl">Apply Now</div>
                                         </div>
                                     </div>
-                                    <div className="space-y-1.5 sm:space-y-2 lg:space-y-3">
-                                        <div className="h-1.5 sm:h-2 w-full bg-gray-100 rounded"></div>
-                                        <div className="h-1.5 sm:h-2 w-full bg-gray-100 rounded"></div>
-                                        <div className="h-1.5 sm:h-2 w-2/3 bg-gray-50 rounded"></div>
+
+                                    {/* floating element 2 */}
+                                    <div className="absolute bottom-10 -right-4 bg-white rounded-2xl p-4 shadow-2xl border border-slate-100 flex items-center gap-3 animate-float animation-delay-2000">
+                                        <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                                            <Heart size={20} className="text-green-600 fill-current" />
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Impact Score</div>
+                                            <div className="text-lg font-black text-slate-800">98.5%</div>
+                                        </div>
                                     </div>
                                 </div>
+                                
+                                {/* Background glow elements */}
+                                <div className="absolute -top-10 -right-10 w-40 h-40 bg-blue-500/20 blur-[80px] rounded-full"></div>
+                                <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-500/20 blur-[80px] rounded-full"></div>
                             </div>
-                            {/* Decorative elements */}
-                            <div className="absolute -top-10 -right-10 w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 bg-blue-600/10 blur-3xl rounded-full"></div>
-                            <div className="absolute -bottom-10 -left-10 w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 bg-indigo-600/10 blur-3xl rounded-full"></div>
                         </motion.div>
                     </div>
                 </div>
             </section>
 
-            {/* 3. How It Works Section */}
-            <section id="how-it-works" className="py-16 sm:py-20 lg:py-24 bg-white">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mb-10 sm:mb-12 lg:mb-16">
-                    <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4">How It Works</h2>
-                    <p className="text-sm sm:text-base lg:text-lg text-gray-600 max-w-2xl mx-auto px-4">Three simple steps to start making an impact in your community.</p>
-                </div>
+            {/* 3. How It Works - Reimagined */}
+            <section id="how-it-works" className="py-24 sm:py-32 bg-slate-50">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center mb-20">
+                        <h2 className="text-3xl sm:text-5xl font-black text-slate-900 mb-6 tracking-tight">Ecosystem of Impact</h2>
+                        <p className="text-lg text-slate-600 max-w-2xl mx-auto font-medium">We've built a seamless cycle where professional growth drives community development.</p>
+                    </div>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 lg:gap-12">
-                    {[
-                        {
-                            icon: <Layout className="text-blue-600" size={32} />,
-                            title: "Create Profile",
-                            desc: "Sign up and build your profile. Share your skills, interests, and availability."
-                        },
-                        {
-                            icon: <Users className="text-blue-600" size={32} />,
-                            title: "Find Opportunities",
-                            desc: "Browse through hundreds of volunteering opportunities posted by NGOs worldwide."
-                        },
-                        {
-                            icon: <CheckCircle className="text-blue-600" size={32} />,
-                            title: "Make Impact",
-                            desc: "Connect with organizations, contribute your expertise, and see your impact Grow!"
-                        },
-                    ].map((item, idx) => (
-                        <motion.div
-                            key={idx}
-                            whileHover={{ y: -5 }}
-                            className="p-6 sm:p-8 lg:p-10 rounded-2xl sm:rounded-3xl bg-gray-50 border border-gray-100 hover:shadow-2xl hover:shadow-blue-100 transition-all text-center group"
-                        >
-                            <div className="mb-4 sm:mb-5 lg:mb-6 flex justify-center transform group-hover:scale-110 transition-transform">
-                                <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 flex items-center justify-center">
-                                    {React.cloneElement(item.icon, {
-                                        size: window.innerWidth < 640 ? 28 : window.innerWidth < 1024 ? 32 : 40
-                                    })}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-12 sm:gap-16">
+                        {[
+                            {
+                                num: "01",
+                                icon: <Layout className="text-blue-600" size={32} />,
+                                title: "Create Your ID",
+                                desc: "Share your professional expertise and social interests to build your impact identity."
+                            },
+                            {
+                                num: "02",
+                                icon: <Users className="text-blue-600" size={32} />,
+                                title: "Smart Matching",
+                                desc: "Our platform highlights the perfect NGOs needing precisely your type of expertise."
+                            },
+                            {
+                                num: "03",
+                                icon: <CheckCircle className="text-blue-600" size={32} />,
+                                title: "Direct Impact",
+                                desc: "Collaborate directly with NGO leaders and witness the real-world results of your work."
+                            },
+                        ].map((item, idx) => (
+                            <div key={idx} className="relative group">
+                                <div className="absolute -top-8 -left-2 text-7xl font-black text-slate-200/50 group-hover:text-blue-100 transition-colors duration-500">{item.num}</div>
+                                <div className="relative z-10">
+                                    <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl border border-slate-100 mb-8 transform group-hover:-translate-y-2 transition-transform duration-500">
+                                        {item.icon}
+                                    </div>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-4">{item.title}</h3>
+                                    <p className="text-slate-600 leading-relaxed font-medium">{item.desc}</p>
                                 </div>
                             </div>
-                            <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 mb-2 sm:mb-3 lg:mb-4">{item.title}</h3>
-                            <p className="text-xs sm:text-sm lg:text-base text-gray-600 leading-relaxed">{item.desc}</p>
-                        </motion.div>
-                    ))}
-                </div>
-            </section>
-
-            {/* 4. Features Section */}
-            <section className="py-16 sm:py-20 lg:py-24 bg-gray-50 overflow-hidden">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-10 sm:mb-12 lg:mb-16">
-                    <div className="max-w-2xl text-center sm:text-left mx-auto sm:mx-0">
-                        <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-3 sm:mb-4 tracking-tight">Platform Features</h2>
-                        <p className="text-sm sm:text-base lg:text-lg text-gray-600">Everything you need to manage volunteering and social impact projects efficiently.</p>
-                    </div>
-                </div>
-
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-                    {[
-                        {
-                            icon: <Zap size={20} />,
-                            title: "Smart Skill Matching",
-                            desc: "Our algorithm connects you with projects that perfectly match your expertise."
-                        },
-                        {
-                            icon: <ShieldCheck size={20} />,
-                            title: "Secure Registration",
-                            desc: "Verified profiles for both volunteers and NGOs to ensure a safe community."
-                        },
-                        {
-                            icon: <BarChart3 size={20} />,
-                            title: "Real-time Updates",
-                            desc: "Stay informed with instant notifications about project applications and milestones."
-                        },
-                        {
-                            icon: <Layout size={20} />,
-                            title: "NGO Dashboard",
-                            desc: "Powerful tools for organizations to manage volunteers and track project progress."
-                        },
-                    ].map((feature, idx) => (
-                        <div key={idx} className="bg-white p-5 sm:p-6 lg:p-8 rounded-xl sm:rounded-2xl border border-gray-100 hover:border-blue-200 transition-all shadow-sm hover:shadow-lg group">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-3 sm:mb-4 lg:mb-6 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                                {feature.icon}
-                            </div>
-                            <h4 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-2 sm:mb-3">{feature.title}</h4>
-                            <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">{feature.desc}</p>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            {/* 5. Impact Section (Stats) */}
-            <section className="py-16 sm:py-20 lg:py-24 bg-white border-y border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-6 lg:gap-12 text-center">
-                        {[
-                            { label: "Volunteers", value: "500+" },
-                            { label: "NGOs Joined", value: "100+" },
-                            { label: "Projects Completed", value: "1000+" },
-                        ].map((stat, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, y: 20 }}
-                                whileInView={{ opacity: 1, y: 0 }}
-                                viewport={{ once: true }}
-                                transition={{ delay: idx * 0.1 }}
-                            >
-                                <div className="text-3xl sm:text-4xl lg:text-5xl xl:text-7xl font-black text-blue-600 mb-2 sm:mb-3 lg:mb-4">{stat.value}</div>
-                                <div className="text-xs sm:text-sm lg:text-base font-semibold text-gray-500 uppercase tracking-widest">{stat.label}</div>
-                            </motion.div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* 6. Call To Action Section */}
-            <section className="py-16 sm:py-20 lg:py-24 xl:py-32">
+            {/* 4. Features Section - Premium Grid */}
+            <section id="about" className="py-24 sm:py-32 bg-white">
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="relative rounded-2xl sm:rounded-3xl lg:rounded-[2.5rem] bg-gradient-to-r from-blue-700 to-indigo-800 p-6 sm:p-8 lg:p-12 xl:p-24 overflow-hidden text-center text-white shadow-2xl">
-                        {/* Background pattern */}
-                        <div className="absolute top-0 right-0 opacity-10">
-                            <Globe size={200} className="sm:w-[300px] sm:h-[300px] lg:w-[400px] lg:h-[400px]" />
+                    <div className="grid lg:grid-cols-2 gap-16 items-center">
+                        <div>
+                            <h2 className="text-3xl sm:text-5xl font-black text-slate-900 mb-8 leading-tight">Empowering both sides of the <span className="text-blue-600">bridge</span></h2>
+                            <p className="text-lg text-slate-600 mb-12 font-medium leading-relaxed">Whether you are an NGO looking for specialized help or a professional looking to give back, our platform provides the high-end tools you need.</p>
+                            
+                            <div className="space-y-6">
+                                {[
+                                    { t: "Verified NGO Community", d: "Every organization is vetted for authentic local impact." },
+                                    { t: "Specialized Skill Matching", d: "No more generic volunteering. Do what you do best." },
+                                    { t: "Project Milestones", d: "Track progress and transparency from start to finish." }
+                                ].map((f, i) => (
+                                    <div key={i} className="flex gap-4">
+                                        <div className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center mt-1">
+                                            <CheckCircle size={14} className="text-blue-600" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-slate-900">{f.t}</h4>
+                                            <p className="text-sm text-slate-600 font-medium">{f.d}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
                         </div>
 
-                        <div className="relative z-10 max-w-2xl mx-auto">
-                            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-6xl font-bold mb-4 sm:mb-6 lg:mb-8 text-white leading-tight">Ready to Make a Difference?</h2>
-                            <p className="text-sm sm:text-base lg:text-xl text-blue-50 mb-6 sm:mb-8 lg:mb-12 italic opacity-90 px-4">
-                                "Join SkillBridge today and start your journey towards creating social impact with your unique skills."
-                            </p>
-                            <Link to="/register" className="inline-block px-6 sm:px-8 lg:px-10 py-3 sm:py-4 lg:py-5 bg-white text-blue-700 font-black rounded-xl lg:rounded-2xl text-sm sm:text-base lg:text-xl hover:bg-gray-50 shadow-2xl hover:scale-105 active:scale-95 transition-all">
-                                Join SkillBridge Today
-                            </Link>
+                        <div className="grid grid-cols-2 gap-4 sm:gap-6">
+                            {[
+                                { icon: <Zap />, title: "Smart Matches" },
+                                { icon: <ShieldCheck />, title: "Verified NGOs" },
+                                { icon: <BarChart3 />, title: "Analytics" },
+                                { icon: <Mail />, title: "Messenger" }
+                            ].map((box, i) => (
+                                <div key={i} className={`p-8 rounded-3xl border-2 transition-all duration-300 ${i === 1 ? 'bg-slate-900 text-white border-slate-900 shadow-2xl' : 'bg-slate-50 border-slate-50 hover:border-blue-200'} ${i % 2 !== 0 ? 'translate-y-8' : ''}`}>
+                                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${i === 1 ? 'bg-blue-600' : 'bg-blue-100 text-blue-600'}`}>{box.icon}</div>
+                                    <h5 className="font-black text-lg mb-2">{box.title}</h5>
+                                    <p className={`text-xs opacity-70 font-bold uppercase tracking-widest`}>Feature {i+1}</p>
+                                </div>
+                            ))}
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* 7. Footer */}
-            <footer id="footer" className="bg-white pt-16 sm:pt-20 lg:pt-24 pb-8 sm:pb-10 lg:pb-12 overflow-hidden border-t border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-12 sm:mb-16 lg:mb-20">
-                    <div className="text-center sm:text-left">
-                        <Link to="/" className="mb-4 sm:mb-6 lg:mb-8 block">
-                            <span className="font-bold text-2xl text-blue-600">SkillBridge</span>
-                        </Link>
-                        <p className="text-xs sm:text-sm text-gray-500 leading-relaxed">
-                            Bridging the gap between talented volunteers and NGOs to foster meaningful change in our communities.
-                        </p>
-                    </div>
-
-                    <div className="text-center sm:text-left">
-                        <h5 className="font-bold text-gray-900 mb-4 sm:mb-6 lg:mb-8 uppercase tracking-widest text-xs">Quick Links</h5>
-                        <ul className="space-y-2 sm:space-y-3 lg:space-y-4">
-                            <li><a href="#" className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 transition-colors">Home</a></li>
-                            <li><a href="#how-it-works" className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 transition-colors">About Us</a></li>
-                            <li><a href="#" className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 transition-colors">Services</a></li>
-                            <li><a href="#" className="text-xs sm:text-sm text-gray-500 hover:text-blue-600 transition-colors">Testimonials</a></li>
-                        </ul>
-                    </div>
-
-                    <div className="text-center sm:text-left">
-                        <h5 className="font-bold text-gray-900 mb-4 sm:mb-6 lg:mb-8 uppercase tracking-widest text-xs">Contact Info</h5>
-                        <ul className="space-y-2 sm:space-y-3 lg:space-y-4 text-gray-500">
-                            <li className="flex items-center gap-2 sm:gap-3 justify-center sm:justify-start text-xs sm:text-sm">
-                                <Mail size={14} className="sm:w-4 sm:h-4" /> contact@skillbridge.org
-                            </li>
-                            <li className="flex items-start gap-2 sm:gap-3 justify-center sm:justify-start text-xs sm:text-sm">
-                                <Globe size={14} className="mt-0.5 sm:w-4 sm:h-4 flex-shrink-0" />
-                                <span>123 Impact Way, Social Hub, Tech City</span>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div className="text-center sm:text-left">
-                        <h5 className="font-bold text-gray-900 mb-4 sm:mb-6 lg:mb-8 uppercase tracking-widest text-xs">Follow Us</h5>
-                        <div className="flex space-x-3 sm:space-x-4 justify-center sm:justify-start">
-                            {[1, 2, 3, 4].map(i => (
-                                <a key={i} href="#" className="w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 bg-gray-50 rounded-full flex items-center justify-center text-gray-400 hover:bg-blue-600 hover:text-white transition-all">
-                                    <span className="sr-only">Social Link {i}</span>
-                                    <div className="w-4 h-4 sm:w-4.5 sm:h-4.5 lg:w-5 lg:h-5 bg-current rounded-sm"></div>
-                                </a>
-                            ))}
+            {/* 6. High Energy CTA */}
+            <section className="py-24 sm:py-32">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="relative rounded-[3rem] bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-800 p-8 sm:p-16 lg:p-32 overflow-hidden text-center group">
+                        <div className="absolute top-0 right-0 p-10 opacity-10 transform group-hover:scale-110 transition-transform duration-700">
+                            <Globe size={300} />
+                        </div>
+                        <div className="relative z-10 max-w-4xl mx-auto">
+                            <h2 className="text-4xl sm:text-6xl lg:text-7xl font-black text-white mb-10 leading-[1.1] tracking-tight">Ready to impact lives through <span className="text-blue-300">your skills?</span></h2>
+                            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                                <Link to="/register" className="px-12 py-6 bg-white text-blue-700 font-black rounded-2xl text-xl hover:bg-slate-50 shadow-2xl transition-all active:scale-95">
+                                    Join SkillBridge Now
+                                </Link>
+                                <div className="text-white/80 font-bold flex items-center gap-2">
+                                    <CheckCircle size={20} className="text-blue-300" />
+                                    100% Free for Volunteers
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
+            </section>
 
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 sm:pt-7 lg:pt-8 border-t border-gray-100 flex flex-col sm:flex-row justify-between items-center text-gray-400 text-xs sm:text-sm gap-3 sm:gap-4 text-center">
-                    <p>© {new Date().getFullYear()} SkillBridge. All rights reserved.</p>
-                    <div className="flex space-x-4 sm:space-x-6">
-                        <a href="#" className="hover:text-gray-600">Privacy Policy</a>
-                        <a href="#" className="hover:text-gray-600">Terms of Service</a>
+            {/* 7. Footer - Modern & Clean */}
+            <footer id="footer" className="bg-slate-900 pt-24 pb-12 text-slate-400">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12 sm:gap-16 pb-20 border-b border-white/5">
+                        <div className="space-y-8">
+                            <Link to="/" className="flex items-center gap-2">
+                                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                                    <Zap size={16} className="text-white fill-current" />
+                                </div>
+                                <span className="font-bold text-xl tracking-tight text-white">SkillBridge</span>
+                            </Link>
+                            <p className="text-sm font-medium leading-relaxed max-w-xs">Connecting specialized talent with nonprofit missions to accelerate global social progress.</p>
+                        </div>
+
+                        <div>
+                            <h5 className="font-black text-white text-xs uppercase tracking-widest mb-8">Platform</h5>
+                            <ul className="space-y-4 text-sm font-bold">
+                                <li><a href="#" className="hover:text-blue-400 transition-colors">For Volunteers</a></li>
+                                <li><a href="#" className="hover:text-blue-400 transition-colors">For NGOs</a></li>
+                                <li><a href="#" className="hover:text-blue-400 transition-colors">How it Works</a></li>
+                                <li><a href="#" className="hover:text-blue-400 transition-colors">Security</a></li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h5 className="font-black text-white text-xs uppercase tracking-widest mb-8">Resources</h5>
+                            <ul className="space-y-4 text-sm font-bold">
+                                <li><a href="#" className="hover:text-blue-400 transition-colors">Blog</a></li>
+                                <li><a href="#" className="hover:text-blue-400 transition-colors">Impact Stories</a></li>
+                                <li><a href="#" className="hover:text-blue-400 transition-colors">Documentation</a></li>
+                                <li><a href="#" className="hover:text-blue-400 transition-colors">Contact</a></li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h5 className="font-black text-white text-xs uppercase tracking-widest mb-8">Updates</h5>
+                            <p className="text-xs font-bold mb-6">Get notified about new high-impact roles.</p>
+                            <form className="flex gap-2">
+                                <input type="email" placeholder="Your Email" className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm flex-1 outline-none focus:border-blue-500 transition-colors" />
+                                <button type="submit" className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg"><ChevronRight /></button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div className="pt-12 flex flex-col sm:flex-row justify-between items-center gap-6">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-[#475569]">© {new Date().getFullYear()} SKILLBRIDGE PLATFORM. CRAFTED FOR IMPACT.</p>
+                        <div className="flex space-x-8 text-[11px] font-black uppercase tracking-widest">
+                            <a href="#" className="hover:text-white transition-colors">Privacy</a>
+                            <a href="#" className="hover:text-white transition-colors">Terms</a>
+                        </div>
                     </div>
                 </div>
             </footer>
 
-            {/* Global Animations for components */}
             <style dangerouslySetInnerHTML={{
                 __html: `
         @keyframes float {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
-        }
-        @media (min-width: 768px) {
-          @keyframes float {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
-          }
+          50% { transform: translateY(-30px); }
         }
         .animate-float {
-          animation: float 6s ease-in-out infinite;
+          animation: float 8s ease-in-out infinite;
         }
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fadeIn 0.8s ease-out forwards;
+        .animation-delay-2000 {
+          animation-delay: 2s;
         }
       `}} />
         </div>

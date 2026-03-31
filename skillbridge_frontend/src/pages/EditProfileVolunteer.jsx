@@ -2,8 +2,10 @@ import { ArrowLeft, Camera, FileText, MapPin, Save, Sparkles, Trash2, User, X } 
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 import apiFetch from "../services/api";
 import { getStoredToken } from "../utils/authStorage";
+import "./EditProfile.css";
 
 const EditProfileVolunteer = () => {
     const navigate = useNavigate();
@@ -23,7 +25,6 @@ const EditProfileVolunteer = () => {
     const [pendingPhotoFile, setPendingPhotoFile] = useState(null);
     const [pendingPhotoRemove, setPendingPhotoRemove] = useState(false);
     const [uploading, setUploading] = useState(false);
-    const [hoverPhoto, setHoverPhoto] = useState(false);
     const fileInputRef = useRef(null);
 
     useEffect(() => {
@@ -77,13 +78,6 @@ const EditProfileVolunteer = () => {
         setFormData({ ...formData, skills: updated.join(", ") });
     };
 
-    const handleSkillKeyDown = (e) => {
-        if (e.key === "Enter" || e.key === ",") {
-            e.preventDefault();
-            addSkill();
-        }
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage("");
@@ -116,20 +110,13 @@ const EditProfileVolunteer = () => {
                 setPendingPhotoRemove(false);
             }
 
-            const payload = {
-                ...formData,
-                skills: skillTags
-            };
-
-            await apiFetch("/profile/volunteer", {
-                method: "PUT",
-                body: JSON.stringify(payload)
-            });
+            const payload = { ...formData, skills: skillTags };
+            await apiFetch("/profile/volunteer", { method: "PUT", body: JSON.stringify(payload) });
             setMessage("Profile updated successfully!");
             setMessageType("success");
             setTimeout(() => setMessage(""), 4000);
         } catch (error) {
-            setMessage("Failed to update profile: " + error.message);
+            setMessage("Failed: " + error.message);
             setMessageType("error");
         } finally {
             setUploading(false);
@@ -137,272 +124,130 @@ const EditProfileVolunteer = () => {
     };
 
     if (loading) return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8" }}>
-            <Sidebar />
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <div style={{ textAlign: "center" }}>
-                    <div style={{ width: 40, height: 40, border: "4px solid #e5e7eb", borderTopColor: "#2563eb", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
-                    <p style={{ color: "#6b7280", fontSize: 14 }}>Loading profile...</p>
-                </div>
-            </div>
-            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        <div className="layout-wrapper">
+             <Sidebar />
+             <div className="main-container">
+                 <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                     <div className="spinner" style={{ width: 44, height: 44, border: "4px solid #e2e8f0", borderTopColor: "var(--color-volunteer)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                 </div>
+             </div>
         </div>
     );
 
     const displayPhoto = photoPreview || (photoUrl && !pendingPhotoRemove ? photoUrl : "");
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+        <div className="layout-wrapper">
             <Sidebar />
-            <div style={{ flex: 1, padding: "32px 40px", overflowY: "auto" }}>
-                {/* Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                        <button onClick={() => navigate(-1)} style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 40, height: 40, borderRadius: 10, border: "1px solid #e2e8f0", background: "white", cursor: "pointer", transition: "all 0.2s" }}>
-                            <ArrowLeft size={18} color="#475569" />
+            <div className="main-container">
+                <Header 
+                    role="Volunteer" 
+                    profilePhoto={displayPhoto} 
+                    activePage="profile" 
+                />
+
+                <main className="content-inner">
+                    <div className="page-header" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
+                        <button onClick={() => navigate(-1)} className="text-btn" style={{ padding: "8px", border: "1px solid var(--border-common)", borderRadius: 10 }}>
+                            <ArrowLeft size={18} />
                         </button>
                         <div>
-                            <h1 style={{ fontSize: 24, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>Edit Profile</h1>
-                            <p style={{ fontSize: 14, color: "#64748b", margin: "2px 0 0" }}>Update your volunteer information</p>
+                            <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Edit Profile</h2>
+                            <p style={{ fontSize: 14, color: "var(--text-muted)", margin: 0 }}>Keep your volunteer identity updated.</p>
                         </div>
                     </div>
-                </div>
 
-                {/* Toast message */}
-                {message && (
-                    <div style={{
-                        padding: "12px 20px", borderRadius: 12, marginBottom: 20,
-                        display: "flex", alignItems: "center", gap: 10,
-                        background: messageType === "success" ? "#f0fdf4" : "#fef2f2",
-                        border: `1px solid ${messageType === "success" ? "#bbf7d0" : "#fecaca"}`,
-                        color: messageType === "success" ? "#166534" : "#991b1b",
-                        fontSize: 14, fontWeight: 500
-                    }}>
-                        {messageType === "success" ? "✓" : "✕"} {message}
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} style={{ maxWidth: 720 }}>
-                    {/* Photo Card */}
-                    <div style={{
-                        background: "white", borderRadius: 16, padding: 32,
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-                        border: "1px solid #e2e8f0", marginBottom: 20
-                    }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-                            <Camera size={18} color="#2563eb" />
-                            <h3 style={{ fontSize: 16, fontWeight: 600, color: "#0f172a", margin: 0 }}>Profile Photo</h3>
+                    {message && (
+                        <div className={`toast ${messageType}`} style={{ padding: "12px 20px", borderRadius: 10, background: messageType === "success" ? "var(--color-ngo-soft)" : "#fee2e2", color: messageType === "success" ? "var(--color-ngo)" : "#dc2626", marginBottom: 20, fontWeight: 700, border: `1px solid ${messageType === "success" ? "#bbf7d0" : "#fecaca"}` }}>
+                            {message}
                         </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
-                            <div
-                                onClick={() => fileInputRef.current?.click()}
-                                onMouseEnter={() => setHoverPhoto(true)}
-                                onMouseLeave={() => setHoverPhoto(false)}
-                                style={{
-                                    width: 110, height: 110, borderRadius: "50%", flexShrink: 0,
-                                    background: displayPhoto ? `url(${displayPhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe 0%, #ede9fe 100%)",
-                                    cursor: "pointer", position: "relative", overflow: "hidden",
-                                    border: "4px solid #e2e8f0", transition: "border-color 0.2s",
-                                    borderColor: hoverPhoto ? "#2563eb" : "#e2e8f0"
-                                }}
-                            >
-                                {!displayPhoto && (
-                                    <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                        <User size={36} color="#93a3b8" />
+                    )}
+
+                    <form onSubmit={handleSubmit} className="edit-profile-container">
+                        <section className="glass-card" style={{ marginBottom: 20 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+                                <Camera size={18} color="var(--color-volunteer)" />
+                                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Profile Photo</h3>
+                            </div>
+                            <div className="photo-upload-section">
+                                <div 
+                                    onClick={() => fileInputRef.current?.click()}
+                                    style={{
+                                        width: 100, height: 100, borderRadius: "50%",
+                                        background: displayPhoto ? `url(${displayPhoto}) center/cover no-repeat` : "linear-gradient(135deg, #eff6ff, #dbeafe)",
+                                        cursor: "pointer", border: "4px solid #f1f5f9", position: "relative", overflow: "hidden"
+                                    }}
+                                >
+                                    {!displayPhoto && <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}><User size={30} color="#cbd5e1" /></div>}
+                                </div>
+                                <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} style={{ display: "none" }} />
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: "flex", gap: 10 }}>
+                                        <button type="button" onClick={() => fileInputRef.current?.click()} className="action-btn-primary" style={{ padding: "8px 16px", fontSize: 13 }}>Change Photo</button>
+                                        {(photoPreview || photoUrl) && !pendingPhotoRemove && (
+                                            <button type="button" onClick={() => { setPendingPhotoRemove(true); setPendingPhotoFile(null); setPhotoPreview(""); }} className="text-btn danger" style={{ fontSize: 13 }}>Remove</button>
+                                        )}
                                     </div>
-                                )}
-                                <div style={{
-                                    position: "absolute", inset: 0, borderRadius: "50%",
-                                    background: "rgba(0,0,0,0.45)", display: "flex",
-                                    flexDirection: "column", alignItems: "center", justifyContent: "center",
-                                    opacity: hoverPhoto ? 1 : 0, transition: "opacity 0.2s"
-                                }}>
-                                    <Camera size={20} color="white" />
-                                    <span style={{ color: "white", fontSize: 11, marginTop: 4, fontWeight: 500 }}>Change</span>
+                                    <p style={{ fontSize: 12, color: "var(--text-muted)", marginTop: 8 }}>JPG or PNG. Maximum size 5MB.</p>
                                 </div>
-                                {uploading && (
-                                    <div style={{
-                                        position: "absolute", inset: 0, borderRadius: "50%",
-                                        background: "rgba(0,0,0,0.5)", display: "flex",
-                                        alignItems: "center", justifyContent: "center"
-                                    }}>
-                                        <div style={{ width: 24, height: 24, border: "3px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                            </div>
+                        </section>
+
+                        <section className="glass-card" style={{ marginBottom: 20 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+                                <User size={18} color="var(--color-volunteer)" />
+                                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Personal Information</h3>
+                            </div>
+                            <div className="profile-form-grid">
+                                <div>
+                                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Full Name</label>
+                                    <div className="input-with-icon">
+                                        <User size={16} className="input-icon" />
+                                        <input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Full Name" />
                                     </div>
-                                )}
-                            </div>
-                            <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoSelect} style={{ display: "none" }} />
-                            <div>
-                                <p style={{ fontSize: 14, fontWeight: 600, color: "#334155", margin: "0 0 4px" }}>Upload a photo</p>
-                                <p style={{ fontSize: 13, color: "#94a3b8", margin: "0 0 12px" }}>JPG, PNG or GIF. Max 5MB.</p>
-                                <div style={{ display: "flex", gap: 8 }}>
-                                    <button type="button" onClick={() => fileInputRef.current?.click()} style={{
-                                        padding: "7px 16px", fontSize: 13, fontWeight: 500, borderRadius: 8,
-                                        border: "1px solid #2563eb", background: "white", color: "#2563eb",
-                                        cursor: "pointer", transition: "all 0.2s"
-                                    }}>Upload New</button>
-                                    {(photoPreview || photoUrl) && !pendingPhotoRemove && (
-                                        <button type="button" onClick={() => { setPendingPhotoRemove(true); setPendingPhotoFile(null); setPhotoPreview(""); }}
-                                            style={{
-                                                padding: "7px 16px", fontSize: 13, fontWeight: 500, borderRadius: 8,
-                                                border: "1px solid #fca5a5", background: "white", color: "#dc2626",
-                                                cursor: "pointer", display: "flex", alignItems: "center", gap: 4
-                                            }}>
-                                            <Trash2 size={14} /> Remove
-                                        </button>
-                                    )}
+                                </div>
+                                <div>
+                                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Location</label>
+                                    <div className="input-with-icon">
+                                        <MapPin size={16} className="input-icon" />
+                                        <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="City, Country" />
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    </div>
-
-                    {/* Personal Info Card */}
-                    <div style={{
-                        background: "white", borderRadius: 16, padding: 32,
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-                        border: "1px solid #e2e8f0", marginBottom: 20
-                    }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-                            <User size={18} color="#2563eb" />
-                            <h3 style={{ fontSize: 16, fontWeight: 600, color: "#0f172a", margin: 0 }}>Personal Information</h3>
-                        </div>
-
-                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
-                            <div>
-                                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
-                                    Full Name
-                                </label>
-                                <div style={{ position: "relative" }}>
-                                    <User size={16} color="#94a3b8" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
-                                    <input type="text" name="name" value={formData.name} onChange={handleChange}
-                                        placeholder="Your full name"
-                                        style={{
-                                            width: "100%", padding: "10px 12px 10px 36px", fontSize: 14,
-                                            borderRadius: 10, border: "1px solid #e2e8f0", outline: "none",
-                                            transition: "border-color 0.2s, box-shadow 0.2s", background: "#f8fafc",
-                                            boxSizing: "border-box"
-                                        }}
-                                        onFocus={e => { e.target.style.borderColor = "#2563eb"; e.target.style.boxShadow = "0 0 0 3px rgba(37,99,235,0.1)"; e.target.style.background = "white"; }}
-                                        onBlur={e => { e.target.style.borderColor = "#e2e8f0"; e.target.style.boxShadow = "none"; e.target.style.background = "#f8fafc"; }}
-                                    />
-                                </div>
+                            <div style={{ marginTop: 20 }}>
+                                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Bio</label>
+                                <textarea name="bio" value={formData.bio} onChange={handleChange} rows="4" placeholder="Tell us about yourself..." style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14, background: "#f8fafc", resize: "none" }} />
+                                <p style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "right", marginTop: 4 }}>{formData.bio.length}/500</p>
                             </div>
-                            <div>
-                                <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
-                                    Location
-                                </label>
-                                <div style={{ position: "relative" }}>
-                                    <MapPin size={16} color="#94a3b8" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
-                                    <input type="text" name="location" value={formData.location} onChange={handleChange}
-                                        placeholder="City, Country"
-                                        style={{
-                                            width: "100%", padding: "10px 12px 10px 36px", fontSize: 14,
-                                            borderRadius: 10, border: "1px solid #e2e8f0", outline: "none",
-                                            transition: "border-color 0.2s, box-shadow 0.2s", background: "#f8fafc",
-                                            boxSizing: "border-box"
-                                        }}
-                                        onFocus={e => { e.target.style.borderColor = "#2563eb"; e.target.style.boxShadow = "0 0 0 3px rgba(37,99,235,0.1)"; e.target.style.background = "white"; }}
-                                        onBlur={e => { e.target.style.borderColor = "#e2e8f0"; e.target.style.boxShadow = "none"; e.target.style.background = "#f8fafc"; }}
-                                    />
-                                </div>
+                        </section>
+
+                        <section className="glass-card" style={{ marginBottom: 28 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+                                <Sparkles size={18} color="var(--color-volunteer)" />
+                                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Skills & Expertise</h3>
                             </div>
-                        </div>
+                            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+                                <input type="text" value={skillInput} onChange={e => setSkillInput(e.target.value)} onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addSkill())} placeholder="Add a skill..." style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14 }} />
+                                <button type="button" onClick={addSkill} className="action-btn-primary" style={{ padding: "10px 20px" }}>Add</button>
+                            </div>
+                            <div className="skills-wrapper">
+                                {skillTags.map(skill => (
+                                    <span key={skill} className="skill-tag" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                                        {skill}
+                                        <X size={14} onClick={() => removeSkill(skill)} style={{ cursor: "pointer", opacity: 0.7 }} />
+                                    </span>
+                                ))}
+                            </div>
+                        </section>
 
-                        <div style={{ marginTop: 20 }}>
-                            <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
-                                <span style={{ display: "flex", alignItems: "center", gap: 4 }}><FileText size={14} /> Bio</span>
-                            </label>
-                            <textarea name="bio" value={formData.bio} onChange={handleChange} rows="4"
-                                placeholder="Tell us about yourself, your interests and experience..."
-                                style={{
-                                    width: "100%", padding: "10px 14px", fontSize: 14, lineHeight: 1.6,
-                                    borderRadius: 10, border: "1px solid #e2e8f0", outline: "none", resize: "vertical",
-                                    transition: "border-color 0.2s, box-shadow 0.2s", background: "#f8fafc",
-                                    boxSizing: "border-box", fontFamily: "inherit"
-                                }}
-                                onFocus={e => { e.target.style.borderColor = "#2563eb"; e.target.style.boxShadow = "0 0 0 3px rgba(37,99,235,0.1)"; e.target.style.background = "white"; }}
-                                onBlur={e => { e.target.style.borderColor = "#e2e8f0"; e.target.style.boxShadow = "none"; e.target.style.background = "#f8fafc"; }}
-                            />
-                            <p style={{ fontSize: 12, color: "#94a3b8", margin: "4px 0 0", textAlign: "right" }}>{formData.bio.length}/500</p>
+                        <div className="action-footer">
+                            <button type="button" onClick={() => navigate(-1)} className="text-btn" style={{ padding: "11px 24px" }}>Cancel</button>
+                            <button type="submit" disabled={uploading} className="action-btn-primary" style={{ padding: "11px 32px", background: "var(--color-volunteer)", display: "flex", alignItems: "center", gap: 8 }}>
+                                <Save size={18} /> {uploading ? "Saving..." : "Save Changes"}
+                            </button>
                         </div>
-                    </div>
-
-                    {/* Skills Card */}
-                    <div style={{
-                        background: "white", borderRadius: 16, padding: 32,
-                        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
-                        border: "1px solid #e2e8f0", marginBottom: 28
-                    }}>
-                        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
-                            <Sparkles size={18} color="#2563eb" />
-                            <h3 style={{ fontSize: 16, fontWeight: 600, color: "#0f172a", margin: 0 }}>Skills & Expertise</h3>
-                        </div>
-
-                        <label style={{ display: "block", fontSize: 13, fontWeight: 600, color: "#374151", marginBottom: 6 }}>
-                            Add your skills
-                        </label>
-                        <div style={{ display: "flex", gap: 8, marginBottom: 14 }}>
-                            <input type="text" value={skillInput} onChange={e => setSkillInput(e.target.value)}
-                                onKeyDown={handleSkillKeyDown}
-                                placeholder="Type a skill and press Enter"
-                                style={{
-                                    flex: 1, padding: "10px 14px", fontSize: 14,
-                                    borderRadius: 10, border: "1px solid #e2e8f0", outline: "none",
-                                    transition: "border-color 0.2s, box-shadow 0.2s", background: "#f8fafc",
-                                    boxSizing: "border-box"
-                                }}
-                                onFocus={e => { e.target.style.borderColor = "#2563eb"; e.target.style.boxShadow = "0 0 0 3px rgba(37,99,235,0.1)"; e.target.style.background = "white"; }}
-                                onBlur={e => { e.target.style.borderColor = "#e2e8f0"; e.target.style.boxShadow = "none"; e.target.style.background = "#f8fafc"; }}
-                            />
-                            <button type="button" onClick={addSkill} style={{
-                                padding: "10px 20px", fontSize: 13, fontWeight: 600, borderRadius: 10,
-                                border: "none", background: "#2563eb", color: "white", cursor: "pointer",
-                                transition: "background 0.2s", whiteSpace: "nowrap"
-                            }}>+ Add</button>
-                        </div>
-
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                            {skillTags.length === 0 && (
-                                <p style={{ fontSize: 13, color: "#94a3b8", fontStyle: "italic" }}>No skills added yet. Start typing above to add your skills.</p>
-                            )}
-                            {skillTags.map((skill, i) => (
-                                <span key={i} style={{
-                                    display: "inline-flex", alignItems: "center", gap: 6,
-                                    padding: "6px 12px", borderRadius: 20, fontSize: 13, fontWeight: 500,
-                                    background: "linear-gradient(135deg, #eff6ff, #ede9fe)", color: "#3730a3",
-                                    border: "1px solid #c7d2fe"
-                                }}>
-                                    {skill}
-                                    <button type="button" onClick={() => removeSkill(skill)} style={{
-                                        display: "flex", alignItems: "center", justifyContent: "center",
-                                        width: 18, height: 18, borderRadius: "50%", border: "none",
-                                        background: "rgba(67,56,202,0.15)", cursor: "pointer", padding: 0
-                                    }}>
-                                        <X size={12} color="#4338ca" />
-                                    </button>
-                                </span>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div style={{ display: "flex", gap: 12, justifyContent: "flex-end" }}>
-                        <button type="button" onClick={() => navigate(-1)} style={{
-                            padding: "11px 28px", fontSize: 14, fontWeight: 600, borderRadius: 10,
-                            border: "1px solid #e2e8f0", background: "white", color: "#475569",
-                            cursor: "pointer", transition: "all 0.2s"
-                        }}>Cancel</button>
-                        <button type="submit" disabled={uploading} style={{
-                            padding: "11px 32px", fontSize: 14, fontWeight: 600, borderRadius: 10,
-                            border: "none", color: "white", cursor: uploading ? "not-allowed" : "pointer",
-                            background: uploading ? "#93c5fd" : "linear-gradient(135deg, #2563eb, #4f46e5)",
-                            boxShadow: uploading ? "none" : "0 4px 12px rgba(37,99,235,0.3)",
-                            display: "flex", alignItems: "center", gap: 8, transition: "all 0.2s"
-                        }}>
-                            <Save size={16} />
-                            {uploading ? "Saving..." : "Save Changes"}
-                        </button>
-                    </div>
-                </form>
+                    </form>
+                </main>
             </div>
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>

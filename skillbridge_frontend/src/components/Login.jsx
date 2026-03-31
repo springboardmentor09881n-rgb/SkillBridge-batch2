@@ -66,39 +66,58 @@ const Login = () => {
 
 
   return (
-    <div className="login-container">
-      <h2>Sign in to SkillBridge</h2>
-      <form onSubmit={handleSubmit} className="login-form">
-        <label>Email</label>
-        <input
-          type="email"
-          placeholder="Enter your email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
+    <div className="login-page-wrapper">
+      <div className="login-card glass-card">
+        <div className="login-header">
+          <h1 className="brand-logo" style={{ fontSize: "28px", marginBottom: "8px", justifyContent: "center" }}>SkillBridge</h1>
+          <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-main)", margin: "0 0 4px" }}>Welcome Back</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: 0 }}>Sign in to continue your impact journey</p>
+        </div>
 
-        <label>Password</label>
-        <input
-          type="password"
-          placeholder="Enter your password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label>Email Address</label>
+            <input
+              type="email"
+              placeholder="name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+          </div>
 
-        <label>Role</label>
-        <select value={role} onChange={(e) => setRole(e.target.value)}>
-          <option value="Volunteer">Volunteer</option>
-          <option value="NGO">NGO / Organization</option>
-        </select>
+          <div className="form-group">
+            <label>Password</label>
+            <input
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+            />
+          </div>
 
-        <button type="submit" className="login-btn" >Login</button>
-      </form>
-      {error && <p style={{ color: "red" }}>{error}</p>}
-      <p className="register-link">
-        Don’t have an account? <Link to="/register">Register here</Link>
-      </p>
+          <div className="form-group">
+            <label>I am a</label>
+            <select value={role} onChange={(e) => setRole(e.target.value)} className="filter-select" style={{ width: "100%" }}>
+              <option value="Volunteer">Volunteer</option>
+              <option value="NGO">NGO / Organization</option>
+            </select>
+          </div>
+
+          {error && <p className="error-message" style={{ color: "#dc2626", fontSize: "13px", fontWeight: "500", margin: "4px 0" }}>{error}</p>}
+
+          <button type="submit" className="action-btn-primary" style={{ width: "100%", marginTop: "10px" }}>
+            Login to Account
+          </button>
+        </form>
+
+        <div className="login-footer">
+          <p className="register-link">
+            Don’t have an account? <Link to="/register" style={{ color: "var(--color-volunteer)", fontWeight: "600" }}>Register here</Link>
+          </p>
+        </div>
+      </div>
     </div>
   );
 };

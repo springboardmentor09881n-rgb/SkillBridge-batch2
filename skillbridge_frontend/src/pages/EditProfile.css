@@ -1,0 +1,68 @@
+.edit-profile-container {
+    max-width: 800px;
+}
+
+.profile-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+@media (max-width: 600px) {
+    .profile-form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.photo-upload-section {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+@media (max-width: 600px) {
+    .photo-upload-section {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+    }
+}
+
+.action-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 32px;
+}
+
+@media (max-width: 480px) {
+    .action-footer {
+        flex-direction: column-reverse;
+    }
+    
+    .action-footer button {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-with-icon input, .input-with-icon textarea {
+    width: 100%;
+    padding: 10px 12px 10px 36px;
+    border-radius: 10px;
+    border: 1px solid var(--border-common);
+    background: #f8fafc;
+    font-size: 14px;
+}
+
+.input-with-icon .input-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-muted);
+}

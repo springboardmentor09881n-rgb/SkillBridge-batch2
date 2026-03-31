@@ -1,9 +1,10 @@
-import { AlertCircle, ArrowLeft, Briefcase, Building2, CheckCircle, ChevronDown, Clock, FileText, MapPin, Plus, Sparkles, X } from "lucide-react";
+import { AlertCircle, ArrowLeft, Briefcase, Building2, CheckCircle, Clock, FileText, MapPin, Plus, Sparkles, X, Save } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
-import apiFetch from "../services/api";
+import Header from "../components/Header";
+import apiFetch, { PUBLIC_BASE_URL } from "../services/api";
+import "./OpportunityForm.css";
 
 const CreateOpportunity = () => {
     const [formData, setFormData] = useState({
@@ -18,13 +19,12 @@ const CreateOpportunity = () => {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [profilePhoto, setProfilePhoto] = useState("");
-    const [focusField, setFocusField] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const navigate = useNavigate();
 
     useEffect(() => {
         apiFetch("/dashboard/ngo", { method: "GET" })
-            .then(d => { if (d?.photo_url) setProfilePhoto(`http://localhost:8000${d.photo_url}`); })
+            .then(d => { if (d?.photo_url) setProfilePhoto(`${PUBLIC_BASE_URL}${d.photo_url}`); })
             .catch(() => {});
     }, []);
 
@@ -49,16 +49,8 @@ const CreateOpportunity = () => {
         setSubmitting(true);
         setError("");
         try {
-            const payload = {
-                ...formData,
-                required_skills: skills
-            };
-
-            await apiFetch("/opportunities/", {
-                method: "POST",
-                body: JSON.stringify(payload)
-            });
-
+            const payload = { ...formData, required_skills: skills };
+            await apiFetch("/opportunities/", { method: "POST", body: JSON.stringify(payload) });
             setSuccess("Opportunity created successfully!");
             setTimeout(() => navigate("/manage-opportunities"), 1500);
         } catch (err) {
@@ -67,295 +59,109 @@ const CreateOpportunity = () => {
         }
     };
 
-    const inputStyle = (field) => ({
-        width: "100%", padding: "11px 14px 11px 42px", borderRadius: 10, fontSize: 14, boxSizing: "border-box",
-        border: `1.5px solid ${focusField === field ? "#2563eb" : "#e2e8f0"}`,
-        outline: "none", transition: "all 0.2s",
-        boxShadow: focusField === field ? "0 0 0 3px rgba(37,99,235,0.1)" : "none",
-        background: "#fafbfc", color: "#0f172a"
-    });
-
-    const labelStyle = {
-        display: "flex", alignItems: "center", gap: 6, fontWeight: 600, fontSize: 13, color: "#374151", marginBottom: 8
-    };
-
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+        <div className="layout-wrapper">
             <Sidebar />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                {/* Header */}
-                <header style={{
-                    background: "white", padding: "14px 32px", borderBottom: "1px solid #e2e8f0",
-                    display: "flex", alignItems: "center", justifyContent: "space-between"
-                }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>SkillBridge</h1>
-                    <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        {[
-                            { to: "/ngo-dashboard", label: "Dashboard" },
-                            { to: "/manage-opportunities", label: "Opportunities" },
-                            { to: "/ngo-applications", label: "Applications" },
-                            { to: "/ngo-messages", label: "Messages" }
-                        ].map(link => (
-                            <Link key={link.label} to={link.to} style={{
-                                textDecoration: "none", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 500,
-                                color: "#64748b", background: "transparent", transition: "all 0.2s"
-                            }}>{link.label}</Link>
-                        ))}
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
-                            <span style={{ background: "#dcfce7", color: "#16a34a", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>NGO</span>
-                            <NotificationBell />
-                            <div style={{
-                                width: 36, height: 36, borderRadius: "50%",
-                                background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dcfce7, #d1fae5)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                                overflow: "hidden", border: "2px solid #e2e8f0"
-                            }}>
-                                {!profilePhoto && <Building2 size={18} color="#94a3b8" />}
-                            </div>
-                        </div>
-                    </nav>
-                </header>
+            <div className="main-container">
+                <Header 
+                    role="NGO" 
+                    profilePhoto={profilePhoto} 
+                    activePage="opportunities" 
+                />
 
-                <main style={{ flex: 1, padding: "28px 32px", overflowY: "auto" }}>
-                    {/* Page Header */}
-                    <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 24 }}>
-                        <button onClick={() => navigate("/manage-opportunities")} style={{
-                            width: 38, height: 38, borderRadius: 10, border: "1px solid #e2e8f0", background: "white",
-                            display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer",
-                            transition: "all 0.2s", boxShadow: "0 1px 2px rgba(0,0,0,0.04)"
-                        }}
-                        onMouseEnter={e => { e.currentTarget.style.borderColor = "#2563eb"; e.currentTarget.style.background = "#eff6ff"; }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "white"; }}
-                        >
-                            <ArrowLeft size={18} color="#475569" />
+                <main className="content-inner">
+                    <div className="page-header" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
+                        <button onClick={() => navigate(-1)} className="text-btn" style={{ padding: "8px", border: "1px solid var(--border-common)", borderRadius: 10 }}>
+                            <ArrowLeft size={18} />
                         </button>
                         <div>
-                            <h2 style={{ fontSize: 24, fontWeight: 800, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>Create New Opportunity</h2>
-                            <p style={{ fontSize: 14, color: "#94a3b8", margin: "2px 0 0" }}>Fill in the details to post a new volunteer opportunity</p>
+                            <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Create Opportunity</h2>
+                            <p style={{ fontSize: 14, color: "var(--text-muted)", margin: 0 }}>Share a new volunteering role with our community.</p>
                         </div>
                     </div>
 
-                    {/* Toast messages */}
                     {error && (
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", marginBottom: 20,
-                            background: "#fef2f2", border: "1px solid #fecaca", borderRadius: 12, maxWidth: 720
-                        }}>
-                            <AlertCircle size={18} color="#ef4444" />
-                            <span style={{ fontSize: 14, color: "#dc2626", fontWeight: 500 }}>{error}</span>
+                        <div className="toast error" style={{ padding: "12px 20px", borderRadius: 10, background: "#fee2e2", color: "#dc2626", marginBottom: 20, fontWeight: 700, border: "1px solid #fecaca", display: "flex", alignItems: "center", gap: 8 }}>
+                            <AlertCircle size={18} /> {error}
                         </div>
                     )}
+                    
                     {success && (
-                        <div style={{
-                            display: "flex", alignItems: "center", gap: 10, padding: "12px 18px", marginBottom: 20,
-                            background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 12, maxWidth: 720
-                        }}>
-                            <CheckCircle size={18} color="#16a34a" />
-                            <span style={{ fontSize: 14, color: "#16a34a", fontWeight: 500 }}>{success}</span>
+                        <div className="toast success" style={{ padding: "12px 20px", borderRadius: 10, background: "var(--color-ngo-soft)", color: "var(--color-ngo)", marginBottom: 20, fontWeight: 700, border: "1px solid #bbf7d0", display: "flex", alignItems: "center", gap: 8 }}>
+                            <CheckCircle size={18} /> {success}
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} style={{ maxWidth: 720, display: "flex", flexDirection: "column", gap: 20 }}>
-                        {/* Basic Info Card */}
-                        <div style={{
-                            background: "white", borderRadius: 16, border: "1px solid #e2e8f0", padding: 28,
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-                        }}>
-                            <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: "0 0 20px", display: "flex", alignItems: "center", gap: 8 }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 8, background: "#eff6ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <Briefcase size={16} color="#2563eb" />
-                                </div>
-                                Basic Information
-                            </h3>
-
-                            {/* Title */}
+                    <form onSubmit={handleSubmit} className="opp-form-container">
+                        <section className="form-section">
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+                                <Briefcase size={18} color="var(--color-ngo)" />
+                                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Primary Details</h3>
+                            </div>
+                            
                             <div style={{ marginBottom: 20 }}>
-                                <label style={labelStyle}>
-                                    <FileText size={14} color="#64748b" /> Title
-                                </label>
-                                <div style={{ position: "relative" }}>
-                                    <Briefcase size={16} color="#94a3b8" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
-                                    <input type="text" name="title" value={formData.title} onChange={handleChange} required
-                                        placeholder="e.g. Website Redesign for Community Center"
-                                        onFocus={() => setFocusField("title")} onBlur={() => setFocusField("")}
-                                        style={inputStyle("title")} />
+                                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Opportunity Title</label>
+                                <div className="input-with-icon">
+                                    <Sparkles size={16} style={{ position: "absolute", left: 12, color: "var(--text-muted)" }} />
+                                    <input type="text" name="title" value={formData.title} onChange={handleChange} required placeholder="e.g. Graphic Designer for Impact Report" style={{ width: "100%", padding: "10px 10px 10px 38px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14, background: "#f8fafc" }} />
                                 </div>
                             </div>
 
-                            {/* Description */}
-                            <div>
-                                <label style={labelStyle}>
-                                    <FileText size={14} color="#64748b" /> Description
-                                </label>
-                                <div style={{ position: "relative" }}>
-                                    <textarea name="description" value={formData.description} onChange={handleChange} required rows="5"
-                                        placeholder="Describe the opportunity — goals, responsibilities, and impact..."
-                                        onFocus={() => setFocusField("desc")} onBlur={() => setFocusField("")}
-                                        style={{
-                                            ...inputStyle("desc"), paddingLeft: 14, resize: "vertical", minHeight: 120,
-                                            lineHeight: 1.6
-                                        }} />
-                                </div>
-                                <div style={{ textAlign: "right", fontSize: 12, color: formData.description.length > 1000 ? "#ef4444" : "#94a3b8", marginTop: 4 }}>
-                                    {formData.description.length}/1000
-                                </div>
+                            <div style={{ marginBottom: 20 }}>
+                                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Role Description</label>
+                                <textarea name="description" value={formData.description} onChange={handleChange} required rows="5" placeholder="Detail the responsibilities, goals, and direct impact for this role..." style={{ width: "100%", padding: "12px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14, background: "#f8fafc", resize: "none" }} />
                             </div>
-                        </div>
 
-                        {/* Skills Card */}
-                        <div style={{
-                            background: "white", borderRadius: 16, border: "1px solid #e2e8f0", padding: 28,
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-                        }}>
-                            <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: "0 0 20px", display: "flex", alignItems: "center", gap: 8 }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 8, background: "#faf5ff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <Sparkles size={16} color="#7c3aed" />
-                                </div>
-                                Required Skills
-                            </h3>
-
-                            {skills.length > 0 && (
-                                <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 14 }}>
-                                    {skills.map((skill, i) => (
-                                        <span key={i} style={{
-                                            background: "linear-gradient(135deg, #eff6ff, #dbeafe)", color: "#2563eb",
-                                            padding: "6px 14px", borderRadius: 20, fontSize: 13, fontWeight: 600,
-                                            display: "flex", alignItems: "center", gap: 8,
-                                            border: "1px solid #bfdbfe", transition: "all 0.2s"
-                                        }}>
-                                            {skill}
-                                            <X size={14} onClick={() => removeSkill(skill)} style={{
-                                                cursor: "pointer", background: "rgba(37,99,235,0.15)", borderRadius: "50%", padding: 2
-                                            }} />
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-                            <div style={{ display: "flex", gap: 10 }}>
-                                <div style={{ flex: 1, position: "relative" }}>
-                                    <Sparkles size={16} color="#94a3b8" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
-                                    <input type="text" value={skillInput} onChange={(e) => setSkillInput(e.target.value)}
-                                        placeholder="Type a skill and press Enter"
-                                        onFocus={() => setFocusField("skill")} onBlur={() => setFocusField("")}
-                                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addSkill(); } }}
-                                        style={inputStyle("skill")} />
-                                </div>
-                                <button type="button" onClick={addSkill} style={{
-                                    background: "linear-gradient(135deg, #7c3aed, #6d28d9)", color: "white",
-                                    border: "none", borderRadius: 10, padding: "11px 22px", fontWeight: 600, fontSize: 14,
-                                    cursor: "pointer", display: "flex", alignItems: "center", gap: 6, transition: "all 0.2s",
-                                    boxShadow: "0 2px 8px rgba(124,58,237,0.25)"
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.transform = "translateY(-1px)"}
-                                onMouseLeave={e => e.currentTarget.style.transform = "translateY(0)"}
-                                >
-                                    <Plus size={16} /> Add
-                                </button>
-                            </div>
-                            {skills.length === 0 && (
-                                <p style={{ fontSize: 13, color: "#94a3b8", margin: "10px 0 0", fontStyle: "italic" }}>
-                                    Add skills that volunteers need for this opportunity
-                                </p>
-                            )}
-                        </div>
-
-                        {/* Details Card */}
-                        <div style={{
-                            background: "white", borderRadius: 16, border: "1px solid #e2e8f0", padding: 28,
-                            boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-                        }}>
-                            <h3 style={{ fontSize: 16, fontWeight: 700, color: "#0f172a", margin: "0 0 20px", display: "flex", alignItems: "center", gap: 8 }}>
-                                <div style={{ width: 32, height: 32, borderRadius: 8, background: "#fff7ed", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                                    <MapPin size={16} color="#ea580c" />
-                                </div>
-                                Details & Location
-                            </h3>
-
-                            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
-                                {/* Duration */}
+                            <div className="opp-grid">
                                 <div>
-                                    <label style={labelStyle}>
-                                        <Clock size={14} color="#64748b" /> Duration
-                                    </label>
-                                    <div style={{ position: "relative" }}>
-                                        <Clock size={16} color="#94a3b8" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
-                                        <input type="text" name="duration" value={formData.duration} onChange={handleChange} required
-                                            placeholder="e.g. 2-3 weeks, Ongoing"
-                                            onFocus={() => setFocusField("duration")} onBlur={() => setFocusField("")}
-                                            style={inputStyle("duration")} />
+                                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Estimated Duration</label>
+                                    <div className="input-with-icon">
+                                        <Clock size={16} style={{ position: "absolute", left: 12, color: "var(--text-muted)" }} />
+                                        <input type="text" name="duration" value={formData.duration} onChange={handleChange} required placeholder="e.g. 10 hours/week" style={{ width: "100%", padding: "10px 10px 10px 38px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14, background: "#f8fafc" }} />
                                     </div>
                                 </div>
-                                {/* Location */}
                                 <div>
-                                    <label style={labelStyle}>
-                                        <MapPin size={14} color="#64748b" /> Location
-                                    </label>
-                                    <div style={{ position: "relative" }}>
-                                        <MapPin size={16} color="#94a3b8" style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)" }} />
-                                        <input type="text" name="location" value={formData.location} onChange={handleChange} required
-                                            placeholder="e.g. New York, NY or Remote"
-                                            onFocus={() => setFocusField("location")} onBlur={() => setFocusField("")}
-                                            style={inputStyle("location")} />
+                                    <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Location</label>
+                                    <div className="input-with-icon">
+                                        <MapPin size={16} style={{ position: "absolute", left: 12, color: "var(--text-muted)" }} />
+                                        <input type="text" name="location" value={formData.location} onChange={handleChange} required placeholder="e.g. Remote or City, Country" style={{ width: "100%", padding: "10px 10px 10px 38px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14, background: "#f8fafc" }} />
                                     </div>
                                 </div>
                             </div>
+                        </section>
 
-                            {/* Status */}
-                            <div>
-                                <label style={labelStyle}>
-                                    <ChevronDown size={14} color="#64748b" /> Status
-                                </label>
-                                <div style={{ position: "relative" }}>
-                                    <select name="status" value={formData.status} onChange={handleChange}
-                                        onFocus={() => setFocusField("status")} onBlur={() => setFocusField("")}
-                                        style={{
-                                            ...inputStyle("status"), paddingLeft: 14, appearance: "none",
-                                            cursor: "pointer"
-                                        }}>
-                                        <option value="Open">Open</option>
-                                        <option value="Closed">Closed</option>
-                                    </select>
-                                    <ChevronDown size={16} color="#94a3b8" style={{ position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)", pointerEvents: "none" }} />
-                                </div>
+                        <section className="form-section">
+                            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 24 }}>
+                                <Sparkles size={18} color="var(--color-ngo)" />
+                                <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0 }}>Required Skills</h3>
                             </div>
-                        </div>
+                            
+                            <div className="skill-input-row" style={{ marginBottom: 16 }}>
+                                <input type="text" value={skillInput} onChange={e => setSkillInput(e.target.value)} onKeyDown={e => e.key === "Enter" && (e.preventDefault(), addSkill())} placeholder="Type a skill and press enter..." style={{ flex: 1, padding: "10px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14 }} />
+                                <button type="button" onClick={addSkill} className="action-btn-primary" style={{ background: "var(--color-ngo)", padding: "10px 24px" }}>Add</button>
+                            </div>
 
-                        {/* Actions */}
-                        <div style={{ display: "flex", justifyContent: "flex-end", gap: 12, paddingBottom: 20 }}>
-                            <button type="button" onClick={() => navigate("/manage-opportunities")} style={{
-                                padding: "12px 28px", border: "1px solid #e2e8f0", borderRadius: 10,
-                                background: "white", color: "#475569", fontSize: 14, fontWeight: 600, cursor: "pointer",
-                                transition: "all 0.2s"
-                            }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = "#cbd5e1"; e.currentTarget.style.background = "#f8fafc"; }}
-                            onMouseLeave={e => { e.currentTarget.style.borderColor = "#e2e8f0"; e.currentTarget.style.background = "white"; }}
-                            >Cancel</button>
-                            <button type="submit" disabled={submitting} style={{
-                                padding: "12px 32px", border: "none", borderRadius: 10,
-                                background: submitting ? "#93c5fd" : "linear-gradient(135deg, #2563eb, #1d4ed8)",
-                                color: "white", fontSize: 14, fontWeight: 700, cursor: submitting ? "not-allowed" : "pointer",
-                                transition: "all 0.2s", display: "flex", alignItems: "center", gap: 8,
-                                boxShadow: "0 2px 10px rgba(37,99,235,0.3)"
-                            }}
-                            onMouseEnter={e => { if (!submitting) e.currentTarget.style.transform = "translateY(-1px)"; }}
-                            onMouseLeave={e => { e.currentTarget.style.transform = "translateY(0)"; }}
-                            >
-                                {submitting ? (
-                                    <>
-                                        <div style={{ width: 16, height: 16, border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "white", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-                                        Creating...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Plus size={16} /> Create Opportunity
-                                    </>
-                                )}
+                            <div className="skills-wrapper">
+                                {skills.map(skill => (
+                                    <span key={skill} className="skill-tag" style={{ background: "var(--color-ngo-soft)", color: "var(--color-ngo)", border: "1px solid #bbf7d0", padding: "6px 12px", borderRadius: 20, fontSize: 13, fontWeight: 700, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                                        {skill}
+                                        <X size={14} onClick={() => removeSkill(skill)} style={{ cursor: "pointer", opacity: 0.7 }} />
+                                    </span>
+                                ))}
+                                {skills.length === 0 && <p style={{ fontSize: 13, color: "var(--text-muted)", fontStyle: "italic", margin: 0 }}>No specific skills added yet.</p>}
+                            </div>
+                        </section>
+
+                        <div className="form-actions">
+                            <Link to="/manage-opportunities" className="text-btn" style={{ padding: "11px 24px", textDecoration: "none", display: "flex", alignItems: "center" }}>Cancel</Link>
+                            <button type="submit" disabled={submitting} className="action-btn-primary" style={{ background: "var(--color-ngo)", padding: "11px 32px", display: "flex", alignItems: "center", gap: 8 }}>
+                                <Save size={18} /> {submitting ? "Posting..." : "Create Opportunity"}
                             </button>
                         </div>
                     </form>
-                    <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 </main>
             </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     );
 };

@@ -14,9 +14,9 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import NotificationBell from "../components/NotificationBell";
 import Sidebar from "../components/Sidebar";
-import apiFetch from "../services/api";
+import Header from "../components/Header";
+import apiFetch, { PUBLIC_BASE_URL } from "../services/api";
 
 const VolunteerMatchSuggestions = () => {
     const [profile, setProfile] = useState(null);
@@ -123,15 +123,17 @@ const VolunteerMatchSuggestions = () => {
        LOADING STATE
     ──────────────────────────────────────────── */
     if (loading) return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8" }}>
+        <div className="layout-wrapper">
             <Sidebar />
-            <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <div style={{ textAlign: "center" }}>
-                    <div style={{ width: 44, height: 44, border: "4px solid #e5e7eb", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 14px" }} />
-                    <p style={{ fontSize: 15, color: "#64748b", fontWeight: 500 }}>Finding your matches...</p>
+            <div className="main-container">
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ textAlign: "center" }}>
+                        <div style={{ width: 44, height: 44, border: "4px solid #e5e7eb", borderTopColor: "#7c3aed", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 14px" }} />
+                        <p style={{ fontSize: 15, color: "#64748b", fontWeight: 500 }}>Finding your matches...</p>
+                    </div>
                 </div>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     );
 
@@ -139,52 +141,17 @@ const VolunteerMatchSuggestions = () => {
        MAIN RENDER
     ──────────────────────────────────────────── */
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+        <div className="layout-wrapper">
             <Sidebar />
 
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <div className="main-container">
+                <Header 
+                    role="Volunteer" 
+                    profilePhoto={profilePhoto} 
+                    activePage="matches" 
+                />
 
-                {/* ── TOP NAV (identical to VolunteerDashboard) ── */}
-                <header style={{
-                    background: "white", padding: "14px 32px",
-                    borderBottom: "1px solid #e2e8f0",
-                    display: "flex", alignItems: "center", justifyContent: "space-between"
-                }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>SkillBridge</h1>
-                    <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        {[
-                            { to: "/volunteer-dashboard",     label: "Dashboard"    },
-                            { to: "/volunteer-opportunities", label: "Opportunities" },
-                            { to: "/volunteer-applications",  label: "Applications"  },
-                            { to: "/volunteer-messages",      label: "Messages"      },
-                            { to: "/volunteer-matches",       label: "Matches", active: true }
-                        ].map(link => (
-                            <Link key={link.label} to={link.to} style={{
-                                textDecoration: "none", padding: "8px 16px", borderRadius: 8,
-                                fontSize: 14, fontWeight: 500,
-                                color: link.active ? "#7c3aed" : "#64748b",
-                                background: link.active ? "#f5f3ff" : "transparent",
-                                transition: "all 0.2s"
-                            }}>{link.label}</Link>
-                        ))}
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
-                            <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>Volunteer</span>
-                            <NotificationBell />
-                            <Link to="/edit-profile-volunteer" title="Open profile" style={{ textDecoration: "none" }}>
-                                <div style={{
-                                    width: 36, height: 36, borderRadius: "50%",
-                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
-                                }}>
-                                    {!profilePhoto && <User size={18} color="#94a3b8" />}
-                                </div>
-                            </Link>
-                        </div>
-                    </nav>
-                </header>
-
-                <main style={{ flex: 1, padding: "28px 32px", overflowY: "auto" }}>
+                <main className="content-inner">
 
                     {/* ── Welcome Banner ── */}
                     <div style={{

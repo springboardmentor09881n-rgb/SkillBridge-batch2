@@ -106,7 +106,11 @@ const NotificationBell = () => {
             const role = getStoredRole();
             navigate(role === "NGO" ? "/ngo-messages" : "/volunteer-messages");
         } else if (notif.type === "match_suggestion") {
-            navigate("/volunteer-dashboard");
+            if (notif.opportunity_id) {
+                navigate(`/opportunity/${notif.opportunity_id}`);
+            } else {
+                navigate("/volunteer-opportunities");
+            }
         } else if (notif.opportunity_id) {
             navigate(`/opportunity/${notif.opportunity_id}`);
         }

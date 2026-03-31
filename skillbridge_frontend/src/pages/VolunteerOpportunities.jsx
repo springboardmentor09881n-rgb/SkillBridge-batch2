@@ -1,40 +1,61 @@
-import { Clock, MapPin, Search, User } from "lucide-react";
+import { Clock, MapPin, Search, User, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
-import NotificationBell from "../components/NotificationBell";
 import apiFetch, { PUBLIC_BASE_URL }  from "../services/api";
 import "./VolunteerOpportunities.css";
 
 const VolunteerOpportunities = () => {
     const [opportunities, setOpportunities] = useState([]);
+    const [matchedOpps, setMatchedOpps] = useState([]);
     const [appliedOpportunityIds, setAppliedOpportunityIds] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState("all"); // "all" or "matches"
+    
+    // Filters for "Browse All" tab
     const [skillSearch, setSkillSearch] = useState("");
+    const [selectedSkills, setSelectedSkills] = useState([]);
     const [locationSearch, setLocationSearch] = useState("");
+    const [selectedLocations, setSelectedLocations] = useState([]);
     const [statusFilter, setStatusFilter] = useState("Open");
+
+    const toggleSkill = (skill) => {
+        setSelectedSkills(prev => prev.includes(skill) ? prev.filter(s => s !== skill) : [...prev, skill]);
+    };
+
+    const toggleLocation = (loc) => {
+        setSelectedLocations(prev => prev.includes(loc) ? prev.filter(l => l !== loc) : [...prev, loc]);
+    };
+    
+    const [profile, setProfile] = useState(null);
     const [profilePhoto, setProfilePhoto] = useState("");
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [oppsData, profileData, applicationsData] = await Promise.all([
+                const [oppsData, profileData, matchData, applicationsData] = await Promise.all([
                     apiFetch("/opportunities", { method: "GET" }).catch(() => []),
                     apiFetch("/dashboard/volunteer", { method: "GET" }).catch(() => null),
+                    apiFetch("/opportunities/match", { method: "GET" }).catch(() => []),
                     apiFetch("/applications/volunteer", { method: "GET" }).catch(() => []),
                 ]);
+                
                 setOpportunities(Array.isArray(oppsData) ? oppsData : []);
+                setMatchedOpps(Array.isArray(matchData) ? matchData : []);
+                setProfile(profileData);
+                
                 setAppliedOpportunityIds(
                     Array.isArray(applicationsData)
                         ? applicationsData.map(app => app.opportunity_id).filter(Boolean)
                         : []
                 );
+                
                 if (profileData?.photo_url) {
                     setProfilePhoto(`${PUBLIC_BASE_URL}${profileData.photo_url}`);
                 }
             } catch (err) {
                 console.error("Failed to fetch data:", err);
-                setOpportunities([]);
             } finally {
                 setLoading(false);
             }
@@ -42,12 +63,53 @@ const VolunteerOpportunities = () => {
         fetchData();
     }, []);
 
+    /* ── Matching Logic (Consolidated) ── */
+    const userSkills = profile?.skills
+        ? Array.isArray(profile.skills)
+            ? profile.skills
+            : String(profile.skills).split(",").map(s => s.trim()).filter(Boolean)
+        : [];
+
+    const getMatchScore = (requiredSkills = [], oppLocation = "") => {
+        const vSkills = userSkills.map(s => s.toLowerCase());
+        const rSkills = requiredSkills.map(s => s.toLowerCase());
+        const skillMatches = rSkills.filter(r => vSkills.some(v => v.includes(r) || r.includes(v)));
+        
+        const locMatch = profile?.location && oppLocation && 
+                        profile.location.toLowerCase().trim() === oppLocation.toLowerCase().trim();
+
+        if (!requiredSkills.length) return locMatch ? 100 : 0;
+        
+        let score = (skillMatches.length / rSkills.length) * 100;
+        if (locMatch) score = Math.min(100, score + 20); // Add 20% bonus for location match
+        
+        return Math.round(score);
+    };
+
+    const getMatchedSkills = (requiredSkills = []) => {
+        const vSkills = userSkills.map(s => s.toLowerCase());
+        return requiredSkills.filter(r =>
+            vSkills.some(v => v.includes(r.toLowerCase()) || r.toLowerCase().includes(v))
+        );
+    };
+
+    const scoreBadge = (score) => {
+        if (score >= 80) return { bg: "#dcfce7", color: "#16a34a", label: "Excellent" };
+        if (score >= 50) return { bg: "#dbeafe", color: "#2563eb", label: "Good" };
+        return { bg: "#fef3c7", color: "#d97706", label: "Partial" };
+    };
+
+    /* ── Filters & Formatting ── */
     const allSkills = [...new Set(opportunities.flatMap(o => o.required_skills || []))].slice(0, 6);
     const allLocations = [...new Set(opportunities.map(o => o.location).filter(Boolean))].slice(0, 6);
 
     const filteredOpps = opportunities.filter(opp => {
         if (statusFilter === "Open" && opp.status !== "Open") return false;
         if (statusFilter === "Closed" && opp.status !== "Closed") return false;
+        
+        if (selectedSkills.length > 0 && !selectedSkills.some(skill => (opp.required_skills || []).includes(skill))) return false;
+        if (selectedLocations.length > 0 && !selectedLocations.includes(opp.location)) return false;
+
         if (skillSearch && !(opp.required_skills || []).some(s => s.toLowerCase().includes(skillSearch.toLowerCase()))) return false;
         if (locationSearch && !(opp.location || "").toLowerCase().includes(locationSearch.toLowerCase())) return false;
         return true;
@@ -66,207 +128,280 @@ const VolunteerOpportunities = () => {
         }
     };
 
+    const resetFilters = () => {
+        setSkillSearch("");
+        setSelectedSkills([]);
+        setLocationSearch("");
+        setSelectedLocations([]);
+        setStatusFilter("Open");
+    };
+
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+        <div className="layout-wrapper">
             <Sidebar />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+            <div className="main-container">
+                <Header 
+                    role="Volunteer" 
+                    profilePhoto={profilePhoto} 
+                    activePage="opportunities" 
+                />
 
-                {/* Header */}
-                <header style={{
-                    background: "white",
-                    padding: "14px 32px",
-                    borderBottom: "1px solid #e2e8f0",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between"
-                }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>SkillBridge</h1>
-                    <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        {[
-                            { to: "/volunteer-dashboard", label: "Dashboard" },
-                            { to: "/volunteer-opportunities", label: "Opportunities", active: true },
-                            { to: "/volunteer-applications", label: "Applications" },
-                            { to: "/volunteer-messages", label: "Messages" }
-                        ].map(link => (
-                            <Link key={link.label} to={link.to} style={{
-                                textDecoration: "none", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 500,
-                                color: link.active ? "#2563eb" : "#64748b",
-                                background: link.active ? "#eff6ff" : "transparent",
-                                transition: "all 0.2s"
-                            }}>{link.label}</Link>
-                        ))}
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
-                            <span style={{ background: "#ede9fe", color: "#7c3aed", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>Volunteer</span>
-                            <NotificationBell />
-                            <Link to="/edit-profile-volunteer" title="Open profile" style={{ textDecoration: "none" }}>
-                                <div style={{
-                                    width: 36, height: 36, borderRadius: "50%",
-                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dbeafe, #ede9fe)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
-                                }}>
-                                    {!profilePhoto && <User size={18} color="#94a3b8" />}
-                                </div>
-                            </Link>
+                <main className="content-inner">
+                    <div className="page-header" style={{ marginBottom: 24, display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+                        <div>
+                            <h2 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 6px" }}>Volunteering Opportunities</h2>
+                            <p style={{ color: "#64748b", fontSize: 16, margin: 0 }}>Discover high-impact roles matching your talent profile.</p>
                         </div>
-                    </nav>
-                </header>
-
-                {/* Main Content */}
-                <main style={{ padding: "32px" }}>
-                    <h2 style={{ fontSize: "24px", fontWeight: "700", color: "#1a1a1a", marginBottom: "8px" }}>Volunteering Opportunities</h2>
-                    <p style={{ fontSize: "16px", color: "#6b7280", marginBottom: "24px" }}>Find opportunities that match your skills and interests</p>
-
-                    {/* Search & Filters */}
-                    <div style={{
-                        background: "white", borderRadius: "12px", padding: "24px",
-                        marginBottom: "24px", boxShadow: "0 1px 3px rgba(0,0,0,0.08)", border: "1px solid #e5e7eb"
-                    }}>
-                        <div style={{ display: "flex", gap: "20px", marginBottom: "16px", flexWrap: "wrap" }}>
-
-                            {/* Skills Filter */}
-                            <div style={{ flex: 1, minWidth: "200px" }}>
-                                <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Skills</label>
-                                <div style={{ position: "relative" }}>
-                                    <Search size={16} color="#9ca3af" style={{ position: "absolute", left: "10px", top: "10px" }} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search skills..."
-                                        value={skillSearch}
-                                        onChange={e => setSkillSearch(e.target.value)}
-                                        style={{ width: "100%", padding: "8px 8px 8px 32px", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "14px" }}
-                                    />
-                                </div>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
-                                    {allSkills.map(skill => (
-                                        <button key={skill} onClick={() => setSkillSearch(skill)} style={{
-                                            padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
-                                            background: skillSearch === skill ? "#2563eb" : "white",
-                                            color: skillSearch === skill ? "white" : "#374151",
-                                            border: "1px solid #e5e7eb"
-                                        }}>{skill}</button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Location Filter */}
-                            <div style={{ flex: 1, minWidth: "200px" }}>
-                                <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Location</label>
-                                <div style={{ position: "relative" }}>
-                                    <Search size={16} color="#9ca3af" style={{ position: "absolute", left: "10px", top: "10px" }} />
-                                    <input
-                                        type="text"
-                                        placeholder="Search locations..."
-                                        value={locationSearch}
-                                        onChange={e => setLocationSearch(e.target.value)}
-                                        style={{ width: "100%", padding: "8px 8px 8px 32px", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "14px" }}
-                                    />
-                                </div>
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "8px" }}>
-                                    {allLocations.map(loc => (
-                                        <button key={loc} onClick={() => setLocationSearch(loc)} style={{
-                                            padding: "4px 12px", borderRadius: "6px", fontSize: "12px", cursor: "pointer",
-                                            background: locationSearch === loc ? "#2563eb" : "white",
-                                            color: locationSearch === loc ? "white" : "#374151",
-                                            border: "1px solid #e5e7eb"
-                                        }}>{loc}</button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Status Filter */}
-                            <div style={{ minWidth: "140px" }}>
-                                <label style={{ display: "block", fontSize: "13px", fontWeight: "600", color: "#374151", marginBottom: "6px" }}>Status</label>
-                                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                                    style={{ width: "100%", padding: "8px", borderRadius: "8px", border: "1px solid #e5e7eb", fontSize: "14px", background: "white" }}>
-                                    <option value="All">All</option>
-                                    <option value="Open">Open</option>
-                                    <option value="Closed">Closed</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                            <button onClick={() => { setSkillSearch(""); setLocationSearch(""); setStatusFilter("Open"); }}
-                                style={{ padding: "6px 16px", borderRadius: "6px", border: "1px solid #e5e7eb", background: "white", fontSize: "13px", cursor: "pointer", color: "#374151" }}>
-                                🔄 Reset Filters
+                        
+                        {/* Tab Switcher */}
+                        <div className="tab-switcher">
+                            <button 
+                                className={`tab-btn-main ${activeTab === "all" ? "active" : ""}`}
+                                onClick={() => setActiveTab("all")}
+                            >Explore All</button>
+                            <button 
+                                className={`tab-btn-main ${activeTab === "matches" ? "active" : ""}`}
+                                onClick={() => setActiveTab("matches")}
+                                style={{ display: "flex", alignItems: "center", gap: 6 }}
+                            >
+                                <RotateCcw size={14} style={{ transform: activeTab === "matches" ? "rotate(0deg)" : "rotate(-45deg)", transition: "0.3s" }} /> 
+                                Matched For You
                             </button>
                         </div>
                     </div>
 
-                    {/* Opportunities List */}
-                    {loading ? (
-                        <p style={{ color: "#6b7280", textAlign: "center", padding: "40px 0" }}>Loading opportunities...</p>
-                    ) : filteredOpps.length === 0 ? (
-                        <p style={{ color: "#6b7280", fontSize: "16px", textAlign: "center", padding: "40px 0" }}>No opportunities found.</p>
-                    ) : (
-                        filteredOpps.map(opp => (
-                            <div key={opp._id || opp.id} style={{
-                                background: "white", borderRadius: "12px", padding: "24px",
-                                marginBottom: "16px", border: "1px solid #e5e7eb",
-                                boxShadow: "0 1px 3px rgba(0,0,0,0.06)"
-                            }}>
-                                {/* Card Top */}
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "10px" }}>
-                                    <div>
-                                        <h3 style={{ fontSize: "18px", fontWeight: "700", color: "#1a1a1a", margin: 0 }}>{opp.title}</h3>
-                                        <p style={{ fontSize: "14px", color: "#6b7280", margin: "4px 0 0" }}>{opp.ngo}</p>
+                    {activeTab === "all" ? (
+                        <>
+                            <div className="glass-card" style={{ marginBottom: 24 }}>
+                                <div className="search-filters-container">
+                                    <div className="filter-group">
+                                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Skills</label>
+                                        <div className="filter-input-wrapper">
+                                            <Search size={16} className="filter-icon" />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search skills..." 
+                                                value={skillSearch}
+                                                onChange={e => setSkillSearch(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="quick-filter-tags">
+                                            {allSkills.map(s => (
+                                                <button 
+                                                    key={s} 
+                                                    className={`tag-btn ${selectedSkills.includes(s) ? "active" : ""}`}
+                                                    onClick={() => toggleSkill(s)}
+                                                >{s}</button>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <span style={{
-                                        padding: "4px 12px", borderRadius: "20px", fontSize: "12px", fontWeight: "600",
-                                        background: opp.status === "Open" ? "#d1fae5" : "#fee2e2",
-                                        color: opp.status === "Open" ? "#065f46" : "#991b1b"
-                                    }}>{opp.status}</span>
+
+                                    <div className="filter-group">
+                                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Location</label>
+                                        <div className="filter-input-wrapper">
+                                            <Search size={16} className="filter-icon" />
+                                            <input 
+                                                type="text" 
+                                                placeholder="Search location..." 
+                                                value={locationSearch}
+                                                onChange={e => setLocationSearch(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="quick-filter-tags">
+                                            {allLocations.map(l => (
+                                                <button 
+                                                    key={l} 
+                                                    className={`tag-btn ${selectedLocations.includes(l) ? "active" : ""}`}
+                                                    onClick={() => toggleLocation(l)}
+                                                >{l}</button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="filter-group">
+                                        <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Status</label>
+                                        <select 
+                                            className="filter-select"
+                                            value={statusFilter} 
+                                            onChange={e => setStatusFilter(e.target.value)}
+                                            style={{ padding: "10px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14 }}
+                                        >
+                                            <option value="All">All</option>
+                                            <option value="Open">Open</option>
+                                            <option value="Closed">Closed</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <p style={{ fontSize: "14px", color: "#374151", marginBottom: "12px" }}>{opp.description}</p>
-
-                                {/* Skills */}
-                                <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
-                                    {(opp.required_skills || []).map(s => (
-                                        <span key={s} style={{
-                                            padding: "4px 10px", borderRadius: "6px", fontSize: "12px",
-                                            background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe"
-                                        }}>{s}</span>
-                                    ))}
-                                </div>
-
-                                {/* Footer */}
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <div style={{ display: "flex", gap: "16px", fontSize: "14px", color: "#6b7280" }}>
-                                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                            <MapPin size={14} /> {opp.location || "—"}
-                                        </span>
-                                        <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                                            <Clock size={14} /> {opp.duration || "—"}
-                                        </span>
-                                    </div>
-                                    <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                                        <Link to={`/opportunity/${opp._id}`} style={{
-                                            color: "#2563eb", fontWeight: "500", textDecoration: "none", fontSize: "14px"
-                                        }}>View details &gt;</Link>
-                                        {opp.status === "Open" && (
-                                            appliedOpportunityIds.includes(opp._id) ? (
-                                                <button style={{
-                                                    padding: "8px 20px", background: "#16a34a", color: "white",
-                                                    border: "none", borderRadius: "8px", fontSize: "14px",
-                                                    fontWeight: "600", cursor: "default"
-                                                }}>Applied</button>
-                                            ) : (
-                                                <button onClick={() => handleApply(opp._id)} style={{
-                                                    padding: "8px 20px", background: "#2563eb", color: "white",
-                                                    border: "none", borderRadius: "8px", fontSize: "14px",
-                                                    fontWeight: "600", cursor: "pointer"
-                                                }}>Apply</button>
-                                            )
-                                        )}
-                                    </div>
+                                <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 16 }}>
+                                    <button className="text-btn" onClick={resetFilters} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                        <RotateCcw size={14} /> Reset Filters
+                                    </button>
                                 </div>
                             </div>
-                        ))
+
+                            <div className="opportunities-list">
+                                {loading ? (
+                                    <div className="glass-card" style={{ textAlign: "center", padding: 40, color: "#64748b" }}>
+                                        <div className="spinner" style={{ width: 32, height: 32, border: "3px solid #e2e8f0", borderTopColor: "var(--color-volunteer)", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 12px" }} />
+                                        <p>Loading opportunities...</p>
+                                    </div>
+                                ) : filteredOpps.length === 0 ? (
+                                    <div className="glass-card" style={{ textAlign: "center", padding: 40, color: "#64748b" }}>
+                                        <Search size={40} style={{ marginBottom: 12, opacity: 0.3 }} />
+                                        <p>No matching opportunities found.</p>
+                                    </div>
+                                ) : (
+                                    filteredOpps.map(opp => (
+                                        <div key={opp._id || opp.id} className="glass-card card-hover" style={{ padding: 24, transition: "0.2s" }}>
+                                            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                                                <div>
+                                                    <h3 style={{ margin: "0 0 4px", fontSize: 18, fontWeight: 700 }}>{opp.title}</h3>
+                                                    <p style={{ color: "#64748b", margin: 0, fontSize: 14 }}>{opp.ngo_name || "SkillBridge Partner"}</p>
+                                                </div>
+                                                <span className={`badge ${opp.status}`} style={{
+                                                    padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                                                    background: opp.status === "Open" ? "#dcfce7" : "#fee2e2",
+                                                    color: opp.status === "Open" ? "#16a34a" : "#dc2626"
+                                                }}>{opp.status}</span>
+                                            </div>
+
+                                            <p style={{ fontSize: 14, color: "#334155", lineHeight: 1.6, marginBottom: 16 }}>{opp.description}</p>
+
+                                            <div className="skills-wrapper" style={{ marginBottom: 20 }}>
+                                                {(opp.required_skills || []).map(s => (
+                                                    <span key={s} className="skill-tag">{s}</span>
+                                                ))}
+                                            </div>
+
+                                            <div className="opp-card-footer">
+                                                <div style={{ display: "flex", gap: 16, fontSize: 13, color: "#64748b" }}>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                                        <MapPin size={14} /> {opp.location || "Remote"}
+                                                    </div>
+                                                    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                                        <Clock size={14} /> {opp.duration || "Self-paced"}
+                                                    </div>
+                                                </div>
+                                                <div className="opp-card-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                                    <Link to={`/opportunity/${opp._id}`} className="link-btn">View full details</Link>
+                                                    {opp.status === "Open" && (
+                                                        appliedOpportunityIds.includes(opp._id) ? (
+                                                            <span className="applied-badge">Applied</span>
+                                                        ) : (
+                                                            <button onClick={() => handleApply(opp._id)} className="action-btn-primary">Apply Now</button>
+                                                        )
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </>
+                    ) : (
+                        /* Matches Tab Rendering */
+                        <div className="matches-tab-content">
+                            <div className="match-stats-banner">
+                                <div className="stat-item">
+                                    <span className="stat-label">Your Top Skills</span>
+                                    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginTop: 8 }}>
+                                        {userSkills.slice(0, 6).map(s => <span key={s} className="skill-tag-matched">{s}</span>)}
+                                    </div>
+                                </div>
+                                <div className="stat-divider"></div>
+                                <div className="stat-item">
+                                    <span className="stat-label">Total Matches</span>
+                                    <span className="stat-value">{matchedOpps.length}</span>
+                                </div>
+                                <div className="stat-divider"></div>
+                                <div className="stat-item">
+                                    <span className="stat-label">Suggested for You</span>
+                                    <p style={{ margin: 0, fontSize: 12, color: "#64748b" }}>Based on your expertise and preferences.</p>
+                                </div>
+                            </div>
+
+                            <div className="opportunities-list" style={{ marginTop: 24 }}>
+                                {loading ? (
+                                    <div className="glass-card" style={{ textAlign: "center", padding: 60 }}>
+                                        <div className="spinner" style={{ margin: "0 auto 12px" }} />
+                                        <p>Searching for best fits...</p>
+                                    </div>
+                                ) : matchedOpps.length === 0 ? (
+                                    <div className="glass-card" style={{ textAlign: "center", padding: 60 }}>
+                                        <p style={{ color: "#64748b" }}>No matches found. Try updating your skills in profile!</p>
+                                        <Link to="/edit-profile-volunteer" className="action-btn-primary" style={{ display: "inline-block", marginTop: 16, textDecoration: "none" }}>Edit Profile</Link>
+                                    </div>
+                                ) : (
+                                    matchedOpps
+                                        .sort((a, b) => getMatchScore(b.required_skills, b.location) - getMatchScore(a.required_skills, a.location))
+                                        .map(opp => {
+                                            const score = getMatchScore(opp.required_skills, opp.location);
+                                            const badge = scoreBadge(score);
+                                            const matched = getMatchedSkills(opp.required_skills);
+                                            const others = (opp.required_skills || []).filter(s => !matched.includes(s));
+
+                                            return (
+                                                <div key={opp._id} className="glass-card card-hover" style={{ padding: 24, borderLeft: `4px solid ${badge.color}` }}>
+                                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+                                                        <div>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                                                                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>{opp.title}</h3>
+                                                                <span style={{ 
+                                                                    fontSize: 12, fontWeight: 700, padding: "3px 10px", 
+                                                                    borderRadius: 20, background: badge.bg, color: badge.color 
+                                                                }}>{badge.label} · {score}% Match</span>
+                                                            </div>
+                                                            <p style={{ color: "#64748b", margin: "4px 0 0", fontSize: 14 }}>{opp.ngo_name || "SkillBridge Partner"}</p>
+                                                        </div>
+                                                        <span className={`badge ${opp.status}`} style={{
+                                                            padding: "4px 12px", borderRadius: 20, fontSize: 12, fontWeight: 600,
+                                                            background: opp.status === "Open" ? "#dcfce7" : "#fee2e2",
+                                                            color: opp.status === "Open" ? "#16a34a" : "#dc2626"
+                                                        }}>{opp.status}</span>
+                                                    </div>
+
+                                                    <p style={{ fontSize: 14, color: "#334155", lineHeight: 1.6, marginBottom: 16 }}>{opp.description}</p>
+
+                                                    <div className="skills-wrapper" style={{ marginBottom: 20 }}>
+                                                        {matched.map(s => (
+                                                            <span key={s} className="skill-tag" style={{ background: "#dcfce7", color: "#16a34a", borderColor: "#bbf7d0" }}>✓ {s}</span>
+                                                        ))}
+                                                        {others.map(s => (
+                                                            <span key={s} className="skill-tag">{s}</span>
+                                                        ))}
+                                                    </div>
+
+                                                    <div className="opp-card-footer">
+                                                        <div style={{ display: "flex", gap: 16, fontSize: 13, color: "#64748b" }}>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                                                <MapPin size={14} /> {opp.location || "Remote"}
+                                                            </div>
+                                                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                                                                <Clock size={14} /> {opp.duration || "Self-paced"}
+                                                            </div>
+                                                        </div>
+                                                        <div className="opp-card-actions" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                                            <Link to={`/opportunity/${opp._id}`} className="link-btn">View full details</Link>
+                                                            {opp.status === "Open" && (
+                                                                appliedOpportunityIds.includes(opp._id) ? (
+                                                                    <span className="applied-badge">Applied</span>
+                                                                ) : (
+                                                                    <button onClick={() => handleApply(opp._id)} className="action-btn-primary">Apply Now</button>
+                                                                )
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })
+                                )}
+                            </div>
+                        </div>
                     )}
                 </main>
             </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     );
 };

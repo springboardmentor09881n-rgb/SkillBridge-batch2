@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { ArrowLeft, MessageSquare, Search, Sparkles, User, Info } from "lucide-react";
 import ConversationList from "./chat/ConversationList";
 import MessageBox from "./chat/MessageBox";
 import MessageInput from "./chat/MessageInput";
 import { useAuth } from "../context/AuthContext";
 import apiFetch, { WS_BASE_URL } from "../services/api";
+import "./ChatWorkspace.css";
 
 const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
     const { user } = useAuth();
@@ -16,6 +18,7 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
     const [error, setError] = useState("");
     const [volunteerSuggestions, setVolunteerSuggestions] = useState([]);
     const [ngoSuggestions, setNgoSuggestions] = useState([]);
+    const [activeMobileView, setActiveMobileView] = useState("list"); // 'list' or 'chat'
     const wsRef = useRef(null);
     const reconnectTimeoutRef = useRef(null);
     const activeThreadIdRef = useRef("");
@@ -25,7 +28,6 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
             const found = threads.find(thread => thread.user_id === activeThreadId);
             if (found) return found;
 
-            // If not in threads, check if it's a match suggestion we want to chat with
             const suggestion = role === "ngo"
                 ? ngoSuggestions.find(v => v.user_id === activeThreadId)
                 : volunteerSuggestions.find(v => v._id === activeThreadId);
@@ -44,6 +46,9 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
 
     useEffect(() => {
         activeThreadIdRef.current = activeThreadId;
+        if (activeThreadId && window.innerWidth <= 768) {
+            setActiveMobileView("chat");
+        }
     }, [activeThreadId]);
 
     const markConversationRead = useCallback(async (otherUserId) => {
@@ -52,7 +57,7 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
             await apiFetch(`/messages/read/${encodeURIComponent(otherUserId)}`, { method: "PUT" });
             setThreads(prev => prev.map(t => t.user_id === otherUserId ? { ...t, unread_count: 0 } : t));
         } catch {
-            // Keep the UI responsive even if the read-sync request fails.
+            // Logically silent error
         }
     }, []);
 
@@ -94,7 +99,7 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
             setThreads(prev => prev.map(t => t.user_id === otherUserId ? { ...t, unread_count: 0 } : t));
         } catch (e) {
             setMessages([]);
-            setError(e.message || "Failed to load message history");
+            setError(e.message || "Failed to load history");
         } finally {
             setLoadingMessages(false);
         }
@@ -107,17 +112,11 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
     useEffect(() => {
         if (role === "volunteer") {
             apiFetch("/opportunities/match", { method: "GET" })
-                .then(data => {
-                    const list = Array.isArray(data) ? data : [];
-                    setVolunteerSuggestions(list);
-                })
+                .then(data => setVolunteerSuggestions(Array.isArray(data) ? data : []))
                 .catch(() => setVolunteerSuggestions([]));
         } else if (role === "ngo") {
             apiFetch("/opportunities/match-volunteers", { method: "GET" })
-                .then(data => {
-                    const list = Array.isArray(data) ? data.slice(0, 3) : [];
-                    setNgoSuggestions(list);
-                })
+                .then(data => setNgoSuggestions(Array.isArray(data) ? data.slice(0, 3) : []))
                 .catch(() => setNgoSuggestions([]));
         }
     }, [role]);
@@ -135,27 +134,12 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
             const socket = new WebSocket(url);
             wsRef.current = socket;
 
-            socket.onopen = () => {
-                setError("");
-            };
-
             socket.onmessage = (event) => {
                 let payload;
-                try {
-                    payload = JSON.parse(event.data);
-                } catch {
-                    return;
-                }
-
-                if (payload.type === "error") {
-                    setError(payload.detail || "Message delivery failed");
-                    return;
-                }
+                try { payload = JSON.parse(event.data); } catch { return; }
 
                 if (payload.type === "message") {
-                    const sender = payload.sender_id;
-                    const receiver = payload.receiver_id;
-                    const peerId = sender === user.email ? receiver : sender;
+                    const peerId = payload.sender_id === user.email ? payload.receiver_id : payload.sender_id;
                     const isActive = peerId === activeThreadIdRef.current;
 
                     setThreads(prev => {
@@ -167,166 +151,84 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
                                 ...item,
                                 last_message: payload.content,
                                 last_message_at: payload.timestamp,
-                                unread_count: isActive || sender === user.email ? 0 : (item.unread_count || 0) + 1,
+                                unread_count: isActive || payload.sender_id === user.email ? 0 : (item.unread_count || 0) + 1,
                             };
                         });
-                        if (!found) {
-                            fetchConversations();
-                            return prev;
-                        }
+                        if (!found) { fetchConversations(); return prev; }
                         return updated.sort((a, b) => new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0));
                     });
 
                     if (isActive) {
                         setMessages(prev => [...prev, payload]);
-                        if (sender !== user.email) {
-                            void markConversationRead(peerId);
-                        }
+                        if (payload.sender_id !== user.email) markConversationRead(peerId);
                     }
                 }
             };
-
-            socket.onerror = () => {
-                setError("Live chat connection error");
-            };
-
-            socket.onclose = () => {
-                if (wsRef.current === socket) {
-                    wsRef.current = null;
-                }
-                if (!disposed) {
-                    reconnectTimeoutRef.current = setTimeout(connect, 1000);
-                }
-            };
+            socket.onclose = () => { if (!disposed) reconnectTimeoutRef.current = setTimeout(connect, 2000); };
         };
-
         connect();
-
-        return () => {
-            disposed = true;
-            if (reconnectTimeoutRef.current) {
-                clearTimeout(reconnectTimeoutRef.current);
-                reconnectTimeoutRef.current = null;
-            }
-            const socket = wsRef.current;
-            wsRef.current = null;
-            if (socket && socket.readyState < WebSocket.CLOSING) {
-                socket.close(1000, "component-unmount");
-            }
-        };
-    }, [user?.email, user?.token, fetchConversations, markConversationRead]);
+        return () => { disposed = true; if (wsRef.current) wsRef.current.close(); };
+    }, [user, fetchConversations, markConversationRead]);
 
     const sendMessage = () => {
         const trimmed = input.trim();
-        if (!trimmed || !activeThread) return;
-
-        if (!activeThread.chat_enabled) {
-            setError("Chat is enabled only after an application is accepted");
-            return;
-        }
-
+        if (!trimmed || !activeThread || !activeThread.chat_enabled) return;
         const socket = wsRef.current;
-        if (!socket || socket.readyState !== WebSocket.OPEN) {
-            setError("Chat is disconnected. Please refresh this page.");
-            return;
-        }
-
-        socket.send(JSON.stringify({
-            receiver_id: activeThread.user_id,
-            content: trimmed,
-        }));
+        if (!socket || socket.readyState !== WebSocket.OPEN) return setError("Disconnected.");
+        
+        socket.send(JSON.stringify({ receiver_id: activeThread.user_id, content: trimmed }));
         setInput("");
         setError("");
     };
 
-    const suggestions = role === "ngo"
-        ? ngoSuggestions.map(v => ({
-            id: v.user_id,
-            name: v.name,
-            skillMatch: (v.match_meta?.skill_matches || []).length > 0 ? v.match_meta.skill_matches.join(", ") : "Skill match available",
-            match: v.match_meta?.location_match ? "Location matched" : "Skill matched",
-            type: "volunteer_match"
-        }))
-        : volunteerSuggestions
-            .filter(o => o.match_meta?.has_skill_match || o.match_meta?.location_match) // Filter out 0-match items
-            .slice(0, 3)
-            .map(o => ({
-                id: o._id,
-                name: o.title,
-                skillMatch: (o.match_meta?.skill_matches || []).length > 0 ? o.match_meta.skill_matches.join(", ") : "Skill match available",
-                match: o.match_meta?.location_match ? "Location matched" : "Skill matched",
-                type: "opportunity_match"
-            }));
-
     return (
-        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr 280px", gap: 18 }}>
-            <ConversationList
-                threads={threads}
-                activeThreadId={activeThreadId}
-                loading={loadingThreads}
-                onSelect={setActiveThreadId}
-            />
+        <div className="chat-layout">
+            <div className={`chat-threads-sidebar chat-card ${activeMobileView === "list" ? "mobile-active" : ""}`}>
+                <div className="chat-header">
+                    <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Chats</h3>
+                </div>
+                <div style={{ flex: 1, overflowY: "auto" }}>
+                    <ConversationList
+                        threads={threads}
+                        activeThreadId={activeThreadId}
+                        loading={loadingThreads}
+                        onSelect={(id) => {
+                            setActiveThreadId(id);
+                            if (window.innerWidth <= 768) setActiveMobileView("chat");
+                        }}
+                    />
+                </div>
+            </div>
 
-            <div style={{ background: "white", borderRadius: 14, border: "1px solid #e2e8f0", display: "flex", flexDirection: "column", minHeight: 500 }}>
-                <div style={{ padding: "14px 16px", borderBottom: "1px solid #e2e8f0" }}>
-                    <div style={{ fontWeight: 700, color: "#0f172a" }}>{activeThread?.display_name || "Select a conversation"}</div>
-                    <div style={{ fontSize: 12, color: activeThread?.chat_enabled ? "#64748b" : "#d97706", marginTop: 2 }}>
-                        {activeThread ? (activeThread.chat_enabled ? "Chat enabled" : "Chat unlocks after application acceptance") : ""}
+            <div className={`chat-main-area chat-card ${activeMobileView === "chat" ? "mobile-active" : ""}`}>
+                <div className="chat-header">
+                    <button className="chat-back-btn" onClick={() => setActiveMobileView("list")}>
+                        <ArrowLeft size={18} />
+                    </button>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ fontWeight: 800, color: "var(--text-main)", fontSize: 16 }}>{activeThread?.display_name || "SkillBridge Connection"}</div>
+                        <div style={{ fontSize: 12, color: activeThread?.chat_enabled ? "var(--color-ngo)" : "var(--color-warning)" }}>
+                            {activeThread?.chat_enabled ? "Messaging active" : "Unlocks after application acceptance"}
+                        </div>
                     </div>
                 </div>
 
-                <MessageBox messages={messages} loading={loadingMessages} userEmail={user?.email} />
+                <div className="chat-messages-scroll">
+                    <MessageBox messages={messages} loading={loadingMessages} userEmail={user?.email} />
+                    {error && <div style={{ fontSize: 12, color: "var(--color-error)", padding: 10, textAlign: "center" }}>{error}</div>}
+                </div>
 
-                {error && (
-                    <div style={{ margin: "0 12px 10px", fontSize: 12, color: "#dc2626" }}>{error}</div>
-                )}
-
-                <MessageInput
-                    activeThread={activeThread}
-                    input={input}
-                    onInputChange={setInput}
-                    onSend={sendMessage}
-                />
-            </div>
-
-            <div style={{ background: "white", borderRadius: 14, border: "1px solid #e2e8f0", padding: 14 }}>
-                <h3 style={{ margin: 0, fontSize: 16, color: "#0f172a" }}>Match Suggestions</h3>
-                <p style={{ margin: "6px 0 14px", color: "#64748b", fontSize: 12 }}>
-                    {role === "ngo" ? "Accepted volunteers ready to chat" : "Recommended opportunities based on your profile"}
-                </p>
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                    {suggestions.length === 0 ? (
-                        <div style={{ fontSize: 12, color: "#64748b" }}>No suggestions available.</div>
-                    ) : (
-                        suggestions.map(item => (
-                            <div key={item.id} style={{ border: "1px solid #e2e8f0", borderRadius: 10, padding: 10 }}>
-                                <div style={{ fontSize: 13, fontWeight: 700, color: "#0f172a" }}>{item.name}</div>
-                                <div style={{ fontSize: 12, color: "#64748b", marginTop: 3 }}>{item.skillMatch}</div>
-                                <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                                    <div style={{ fontSize: 11, color: "#16a34a", fontWeight: 600 }}>{item.match}</div>
-                                    <button
-                                        onClick={() => {
-                                            if (item.type === "volunteer_match") {
-                                                // Start/Switch to chat
-                                                setActiveThreadId(item.id);
-                                            } else {
-                                                // Navigate to opportunity
-                                                window.location.href = `/opportunity/${item.id}`;
-                                            }
-                                        }}
-                                        style={{
-                                            background: "none", border: "none", color: "#7c3aed",
-                                            fontSize: 11, fontWeight: 700, cursor: "pointer", padding: 0
-                                        }}
-                                    >
-                                        {item.type === "volunteer_match" ? "Message →" : "View →"}
-                                    </button>
-                                </div>
-                            </div>
-                        ))
-                    )}
+                <div className="chat-input-area">
+                    <MessageInput
+                        activeThread={activeThread}
+                        input={input}
+                        onInputChange={setInput}
+                        onSend={sendMessage}
+                    />
                 </div>
             </div>
+
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     );
 };

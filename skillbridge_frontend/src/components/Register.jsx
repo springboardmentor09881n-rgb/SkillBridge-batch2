@@ -70,138 +70,150 @@ const Register = () => {
   };
 
   return (
-    <div className="register-container">
-      <div className="register-card">
-        <h2>Create an Account</h2>
-        <p>Join SkillBridge to connect with NGOs and volunteering opportunities</p>
+    <div className="register-page-wrapper">
+      <div className="register-card glass-card">
+        <div className="register-header">
+          <h1 className="brand-logo" style={{ fontSize: "28px", marginBottom: "8px", justifyContent: "center" }}>SkillBridge</h1>
+          <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-main)", margin: "0 0 4px" }}>Create An Account</h2>
+          <p style={{ color: "var(--text-muted)", fontSize: "14px", margin: 0 }}>Join SkillBridge to connect with NGOs and volunteering opportunities</p>
+        </div>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-
-            <input
-              id="username"
-              type="text"
-              name="username"
-              placeholder="Choose a username"
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email</label>
-            <input
-              id="email"
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              id="password"
-              type="password"
-              name="password"
-              placeholder="Create a password"
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="fullName">Full Name</label>
-            <input
-              id="fullName"
-              type="text"
-              name="fullName"
-              placeholder="Enter your full name or organization name"
-              onChange={handleChange}
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="role">I am a</label>
-            <select
-              id="role"
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-            >
-              <option value="Volunteer">Volunteer</option>
-              <option value="NGO">NGO / Organization</option>
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="location">Location (Optional)</label>
-            <input
-              id="location"
-              type="text"
-              name="location"
-              placeholder="E.g. New York, NY"
-              onChange={handleChange}
-            />
-          </div>
-
-          {role === "Volunteer" && (
+        <form onSubmit={handleSubmit} className="register-form">
+          <div className="form-grid">
             <div className="form-group">
-              <label htmlFor="skills">Skills (Optional)</label>
+              <label htmlFor="username">Username</label>
               <input
-                id="skills"
+                id="username"
                 type="text"
-                name="skills"
-                placeholder="E.g. web development, teaching"
+                name="username"
+                placeholder="Choose a username"
                 onChange={handleChange}
+                required
               />
             </div>
-          )}
 
-          {role === "NGO" && (
-            <>
-              <div className="form-group">
-                <label htmlFor="organizationName">NGO / Organization</label>
-                <input
-                  id="organizationName"
-                  type="text"
-                  name="organizationName"
-                  placeholder="Your organization name"
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="form-group">
+              <label htmlFor="email">Email Address</label>
+              <input
+                id="email"
+                type="email"
+                name="email"
+                placeholder="name@example.com"
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="organizationDescription">Organization Description</label>
-                <textarea
-                  id="organizationDescription"
-                  name="organizationDescription"
-                  placeholder="Briefly describe your organization and mission"
-                  onChange={handleChange}
-                />
-              </div>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                name="password"
+                placeholder="Create a strong password"
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-              <div className="form-group">
-                <label htmlFor="website">Website URL (Optional)</label>
-                <input
-                  id="website"
-                  type="url"
-                  name="website"
-                  placeholder="E.g. https://yourorganization.org"
-                  onChange={handleChange}
-                />
-              </div>
-            </>
-          )}
+            <div className="form-group">
+              <label htmlFor="fullName">Full Name</label>
+              <input
+                id="fullName"
+                type="text"
+                name="fullName"
+                placeholder="Enter your legal full name"
+                onChange={handleChange}
+                required
+              />
+            </div>
 
-          <button type="submit">Create Account</button>
+            <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+              <label htmlFor="role">I am a</label>
+              <select
+                id="role"
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="filter-select"
+                style={{ width: "100%" }}
+              >
+                <option value="Volunteer">Volunteer</option>
+                <option value="NGO">NGO / Organization</option>
+              </select>
+            </div>
+
+            {role === "Volunteer" && (
+              <>
+                <div className="form-group">
+                  <label htmlFor="location">Location (Optional)</label>
+                  <input
+                    id="location"
+                    type="text"
+                    name="location"
+                    placeholder="E.g. New York, NY"
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="skills">Skills (Optional)</label>
+                  <input
+                    id="skills"
+                    type="text"
+                    name="skills"
+                    placeholder="E.g. web development, teaching"
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            )}
+
+            {role === "NGO" && (
+              <>
+                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                  <label htmlFor="organizationName">NGO / Organization Name</label>
+                  <input
+                    id="organizationName"
+                    type="text"
+                    name="organizationName"
+                    placeholder="Your organization's official name"
+                    onChange={handleChange}
+                  />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                  <label htmlFor="organizationDescription">Organization Description</label>
+                  <textarea
+                    id="organizationDescription"
+                    name="organizationDescription"
+                    placeholder="Briefly describe your mission and goals"
+                    onChange={handleChange}
+                    style={{ minHeight: "100px", padding: "12px" }}
+                  />
+                </div>
+
+                <div className="form-group" style={{ gridColumn: "1 / -1" }}>
+                  <label htmlFor="website">Website URL (Optional)</label>
+                  <input
+                    id="website"
+                    type="url"
+                    name="website"
+                    placeholder="https://yourorganization.org"
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            )}
+          </div>
+
+          <button type="submit" className="action-btn-primary" style={{ width: "100%", marginTop: "24px", padding: "14px" }}>
+            Create Your Account
+          </button>
         </form>
 
-        <div className="login-text">
-          Already have an account? <Link to="/login">Sign in</Link>
+        <div className="register-footer">
+          <p className="login-text">
+            Already have an account? <Link to="/login" style={{ color: "var(--color-volunteer)", fontWeight: "600" }}>Sign in</Link>
+          </p>
         </div>
       </div>
     </div>

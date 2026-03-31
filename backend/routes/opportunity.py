@@ -152,7 +152,8 @@ async def get_matched_opportunities(user: dict = Depends(get_current_user)):
             "location_match": location_match,
             "relevance_score": relevance_score,
         }
-        scored.append(opp)
+        if relevance_score > 0:
+            scored.append(opp)
 
         if has_skill_match:
             match_notifications.append(

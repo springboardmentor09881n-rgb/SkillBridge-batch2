@@ -1,8 +1,11 @@
+import { AlertCircle, ArrowLeft, CheckCircle, Clock, MapPin, Send, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import Sidebar from "../components/Sidebar";
+import Header from "../components/Header";
 import { useAuth } from "../context/AuthContext";
-import apiFetch from "../services/api";
+import apiFetch, { PUBLIC_BASE_URL } from "../services/api";
+import "./OpportunityDetail.css";
 
 const OpportunityDetail = () => {
     const { id } = useParams();
@@ -13,22 +16,21 @@ const OpportunityDetail = () => {
     const [applying, setApplying] = useState(false);
     const [applied, setApplied] = useState(false);
     const [message, setMessage] = useState("");
+    const [profilePhoto, setProfilePhoto] = useState("");
 
     useEffect(() => {
         const fetchOpp = async () => {
             try {
-                const [data, apps] = await Promise.all([
+                const [data, apps, profileData] = await Promise.all([
                     apiFetch(`/opportunities/${id}`, { method: "GET" }),
-                    user?.role === "Volunteer"
-                        ? apiFetch("/applications/volunteer", { method: "GET" }).catch(() => [])
-                        : Promise.resolve([])
+                    user?.role === "Volunteer" ? apiFetch("/applications/volunteer", { method: "GET" }).catch(() => []) : Promise.resolve([]),
+                    user ? apiFetch(`/dashboard/${user.role === "NGO" ? "ngo" : "volunteer"}`, { method: "GET" }).catch(() => null) : Promise.resolve(null)
                 ]);
                 setOpportunity(data);
-                if (Array.isArray(apps) && apps.some(a => a.opportunity_id === id)) {
-                    setApplied(true);
-                }
+                if (Array.isArray(apps) && apps.some(a => a.opportunity_id === id)) setApplied(true);
+                if (profileData?.photo_url) setProfilePhoto(`${PUBLIC_BASE_URL}${profileData.photo_url}`);
             } catch (err) {
-                console.error("Failed to fetch opportunity:", err);
+                console.error("Failed to fetch:", err);
             } finally {
                 setLoading(false);
             }
@@ -38,19 +40,12 @@ const OpportunityDetail = () => {
 
     const handleApply = async (e) => {
         e.preventDefault();
-        if (!user || user.role !== "Volunteer") {
-            alert("Please log in as a volunteer to apply.");
-            navigate("/login");
-            return;
-        }
+        if (!user || user.role !== "Volunteer") return navigate("/login");
         setApplying(true);
         try {
-            await apiFetch("/applications", {
-                method: "POST",
-                body: JSON.stringify({ opportunity_id: id, message })
-            });
+            await apiFetch("/applications", { method: "POST", body: JSON.stringify({ opportunity_id: id, message }) });
             setApplied(true);
-            alert("Application submitted successfully!");
+            alert("Application submitted!");
         } catch (err) {
             alert(err.message || "Failed to apply.");
         } finally {
@@ -58,117 +53,116 @@ const OpportunityDetail = () => {
         }
     };
 
-    if (loading) {
-        return (
-            <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa" }}>
-                <Sidebar />
-                <div style={{ flex: 1, padding: "40px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <p>Loading...</p>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="layout-wrapper">
+             <Sidebar />
+             <div className="main-container">
+                 <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                     <div className="spinner" style={{ width: 44, height: 44, border: "4px solid #e2e8f0", borderTopColor: "var(--color-volunteer)", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+                 </div>
+             </div>
+        </div>
+    );
 
-    if (!opportunity) {
-        return (
-            <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa" }}>
-                <Sidebar />
-                <div style={{ flex: 1, padding: "40px" }}>
-                    <p style={{ color: "#e74c3c" }}>Opportunity not found.</p>
-                    <Link to={user?.role === "NGO" ? "/manage-opportunities" : "/volunteer-opportunities"}>Back to Opportunities</Link>
-                </div>
-            </div>
-        );
-    }
+    if (!opportunity) return <div className="layout-wrapper"><Sidebar /><div className="main-container"><div className="content-inner"><p>Not found.</p></div></div></div>;
+
+    const roleColor = user?.role === "NGO" ? "var(--color-ngo)" : "var(--color-volunteer)";
 
     return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f5f7fa", fontFamily: "system-ui, sans-serif" }}>
+        <div className="layout-wrapper">
             <Sidebar />
-            <div style={{ flex: 1, padding: "32px" }}>
-                <Link to={user?.role === "NGO" ? "/manage-opportunities" : "/volunteer-opportunities"} style={{ display: "inline-block", marginBottom: "24px", color: "#2563eb", textDecoration: "none", fontWeight: "500" }}>
-                    ← Back to Opportunities
-                </Link>
+            <div className="main-container">
+                <Header 
+                    role={user?.role || "Guest"} 
+                    profilePhoto={profilePhoto} 
+                    activePage="opportunities" 
+                />
 
-                <div style={{
-                    background: "white",
-                    borderRadius: "12px",
-                    padding: "32px",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.08)",
-                    maxWidth: "700px"
-                }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "20px" }}>
-                        <h1 style={{ fontSize: "24px", fontWeight: "700", color: "#1a1a1a", margin: 0 }}>{opportunity.title}</h1>
-                        <span style={{
-                            background: opportunity.status === "Open" ? "#dcfce7" : "#fef3c7",
-                            color: opportunity.status === "Open" ? "#16a34a" : "#d97706",
-                            padding: "6px 14px",
-                            borderRadius: "20px",
-                            fontSize: "14px",
-                            fontWeight: "500"
-                        }}>{opportunity.status || "Open"}</span>
-                    </div>
-                    <p style={{ fontSize: "14px", color: "#6b7280", marginBottom: "16px" }}>NGO ID: {opportunity.ngo_id || "—"}</p>
-                    <p style={{ fontSize: "16px", color: "#4b5563", lineHeight: 1.7, marginBottom: "20px" }}>{opportunity.description}</p>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginBottom: "20px" }}>
-                        {opportunity.required_skills?.map(skill => (
-                            <span key={skill} style={{
-                                background: "#eff6ff",
-                                color: "#2563eb",
-                                padding: "6px 14px",
-                                borderRadius: "20px",
-                                fontSize: "14px"
-                            }}>{skill}</span>
-                        ))}
-                    </div>
-                    <div style={{ fontSize: "15px", color: "#6b7280", marginBottom: "24px" }}>
-                        <p><strong>Location:</strong> {opportunity.location || "—"}</p>
-                        <p><strong>Duration:</strong> {opportunity.duration || "—"}</p>
-                    </div>
-
-                    {user?.role === "Volunteer" && opportunity.status === "Open" && (
-                        <div style={{ marginTop: "24px", paddingTop: "24px", borderTop: "1px solid #e5e7eb" }}>
-                            {applied ? (
-                                <p style={{ color: "#16a34a", fontWeight: "600" }}>You have applied to this opportunity.</p>
-                            ) : (
-                                <form onSubmit={handleApply}>
-                                    <div style={{ marginBottom: "16px" }}>
-                                        <label style={{ display: "block", marginBottom: "8px", fontWeight: "500", color: "#374151" }}>Message (optional)</label>
-                                        <textarea
-                                            value={message}
-                                            onChange={e => setMessage(e.target.value)}
-                                            placeholder="Why would you like to volunteer for this opportunity?"
-                                            rows={4}
-                                            style={{
-                                                width: "100%",
-                                                padding: "12px",
-                                                borderRadius: "8px",
-                                                border: "1px solid #d1d5db",
-                                                fontSize: "14px",
-                                                fontFamily: "inherit"
-                                            }}
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        disabled={applying}
-                                        style={{
-                                            padding: "12px 24px",
-                                            background: "#16a34a",
-                                            color: "white",
-                                            border: "none",
-                                            borderRadius: "8px",
-                                            fontWeight: "600",
-                                            cursor: applying ? "not-allowed" : "pointer"
-                                        }}
-                                    >
-                                        {applying ? "Applying..." : "Apply"}
-                                    </button>
-                                </form>
-                            )}
+                <main className="content-inner">
+                    <div className="page-header" style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 28 }}>
+                        <button onClick={() => navigate(-1)} className="text-btn" style={{ padding: "8px", border: "1px solid var(--border-common)", borderRadius: 10 }}>
+                            <ArrowLeft size={18} />
+                        </button>
+                        <div>
+                            <h2 style={{ fontSize: 24, fontWeight: 800, margin: 0 }}>Opportunity Details</h2>
+                            <p style={{ fontSize: 14, color: "var(--text-muted)", margin: 0 }}>Review all information before applying.</p>
                         </div>
-                    )}
-                </div>
+                    </div>
+
+                    <div className="detail-container">
+                        <article className="detail-card">
+                            <header className="detail-header">
+                                <div>
+                                    <h1 style={{ fontSize: 28, fontWeight: 800, margin: "0 0 4px", letterSpacing: "-0.02em" }}>{opportunity.title}</h1>
+                                    <p style={{ color: "var(--text-muted)", margin: 0, fontSize: 14 }}>Posted by NGO ID: {opportunity.ngo_id || "—"}</p>
+                                </div>
+                                <span className={`badge ${opportunity.status}`} style={{
+                                    background: opportunity.status === "Open" ? "var(--color-ngo-soft)" : "#fef3c7",
+                                    color: opportunity.status === "Open" ? "var(--color-ngo)" : "#d97706",
+                                    padding: "6px 16px", borderRadius: 20, fontSize: 14, fontWeight: 700
+                                }}>{opportunity.status || "Open"}</span>
+                            </header>
+
+                            <div className="detail-meta-grid">
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                    <MapPin size={18} color={roleColor} />
+                                    <div>
+                                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Location</div>
+                                        <div style={{ fontSize: 14, fontWeight: 600 }}>{opportunity.location || "Remote"}</div>
+                                    </div>
+                                </div>
+                                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                                    <Clock size={18} color={roleColor} />
+                                    <div>
+                                        <div style={{ fontSize: 11, fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase" }}>Duration</div>
+                                        <div style={{ fontSize: 14, fontWeight: 600 }}>{opportunity.duration || "Ongoing"}</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <section style={{ marginBottom: 32 }}>
+                                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Role Description</h3>
+                                <div style={{ fontSize: 16, color: "#475569", lineHeight: 1.8, whiteSpace: "pre-wrap" }}>
+                                    {opportunity.description}
+                                </div>
+                            </section>
+
+                            <section style={{ marginBottom: 32 }}>
+                                <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 12 }}>Required Skills</h3>
+                                <div className="skills-wrapper">
+                                    {opportunity.required_skills?.map(skill => (
+                                        <span key={skill} className="skill-tag" style={{ background: "var(--background-soft)", color: "var(--text-main)", border: "1px solid var(--border-common)" }}>
+                                            <Sparkles size={12} color={roleColor} /> {skill}
+                                        </span>
+                                    ))}
+                                </div>
+                            </section>
+
+                            {user?.role === "Volunteer" && opportunity.status === "Open" && (
+                                <section className="apply-form">
+                                    {applied ? (
+                                        <div style={{ background: "var(--color-ngo-soft)", padding: "16px 20px", borderRadius: 12, display: "flex", alignItems: "center", gap: 10, color: "var(--color-ngo)", fontWeight: 700 }}>
+                                            <CheckCircle size={20} /> You have successfully applied for this role.
+                                        </div>
+                                    ) : (
+                                        <form onSubmit={handleApply}>
+                                            <h3 style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Apply for this Role</h3>
+                                            <div style={{ marginBottom: 20 }}>
+                                                <label style={{ display: "block", fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Introduce yourself (optional)</label>
+                                                <textarea value={message} onChange={e => setMessage(e.target.value)} rows="4" placeholder="Tell the NGO why you are interested..." style={{ width: "100%", padding: "14px", borderRadius: 12, border: "1.5px solid var(--border-common)", fontSize: 14, background: "#f8fafc", outline: "none" }} />
+                                            </div>
+                                            <button type="submit" disabled={applying} className="action-btn-primary" style={{ background: "var(--color-volunteer)", padding: "12px 32px", display: "flex", alignItems: "center", gap: 8 }}>
+                                                <Send size={18} /> {applying ? "Submitting..." : "Submit Application"}
+                                            </button>
+                                        </form>
+                                    )}
+                                </section>
+                            )}
+                        </article>
+                    </div>
+                </main>
             </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
     );
 };

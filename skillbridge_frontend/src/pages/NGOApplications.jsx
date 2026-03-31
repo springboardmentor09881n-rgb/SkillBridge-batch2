@@ -1,9 +1,10 @@
-import { Building2, Check, Inbox, MessageSquare, Search, X } from "lucide-react";
+import { Building2, Check, Inbox, MessageSquare, Search, X, RotateCcw } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import NotificationBell from "../components/NotificationBell";
+import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 import apiFetch from "../services/api";
+import "./NGOApplications.css";
 
 const NGOApplications = () => {
     const [profilePhoto, setProfilePhoto] = useState("");
@@ -67,208 +68,145 @@ const NGOApplications = () => {
         Rejected: applications.filter(a => a.status === "rejected").length,
     };
 
-    return (
-        <div style={{ display: "flex", minHeight: "100vh", background: "#f0f4f8", fontFamily: "'Inter', 'Segoe UI', system-ui, sans-serif" }}>
+    if (loading) return (
+        <div className="layout-wrapper">
             <Sidebar />
-            <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
-                {/* Header */}
-                <header style={{
-                    background: "white", padding: "14px 32px", borderBottom: "1px solid #e2e8f0",
-                    display: "flex", alignItems: "center", justifyContent: "space-between"
-                }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 700, color: "#0f172a", margin: 0, letterSpacing: "-0.02em" }}>SkillBridge</h1>
-                    <nav style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                        {[
-                            { to: "/ngo-dashboard", label: "Dashboard" },
-                            { to: "/manage-opportunities", label: "Opportunities" },
-                            { to: "/ngo-applications", label: "Applications", active: true },
-                            { to: "/ngo-messages", label: "Messages" }
-                        ].map(link => (
-                            <Link key={link.label} to={link.to} style={{
-                                textDecoration: "none", padding: "8px 16px", borderRadius: 8, fontSize: 14, fontWeight: 500,
-                                color: link.active ? "#2563eb" : "#64748b",
-                                background: link.active ? "#eff6ff" : "transparent",
-                                transition: "all 0.2s"
-                            }}>{link.label}</Link>
-                        ))}
-                        <div style={{ display: "flex", alignItems: "center", gap: 12, marginLeft: 12, paddingLeft: 16, borderLeft: "1.5px solid #e2e8f0" }}>
-                            <span style={{ background: "#dcfce7", color: "#16a34a", fontSize: 11, fontWeight: 600, padding: "4px 12px", borderRadius: 20, letterSpacing: "0.03em" }}>NGO</span>
-                            <NotificationBell />
-                            <Link to="/edit-profile-ngo" title="Open profile" style={{ textDecoration: "none" }}>
-                                <div style={{
-                                    width: 36, height: 36, borderRadius: "50%",
-                                    background: profilePhoto ? `url(${profilePhoto}) center/cover no-repeat` : "linear-gradient(135deg, #dcfce7, #d1fae5)",
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    overflow: "hidden", border: "2px solid #e2e8f0", cursor: "pointer"
-                                }}>
-                                    {!profilePhoto && <Building2 size={18} color="#94a3b8" />}
-                                </div>
-                            </Link>
-                        </div>
-                    </nav>
-                </header>
+            <div className="main-container">
+                <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ textAlign: "center" }}>
+                        <div style={{ width: 44, height: 44, border: "4px solid #e2e8f0", borderTopColor: "var(--color-ngo)", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 14px" }} />
+                        <p style={{ fontSize: 15, color: "#64748b", fontWeight: 500 }}>Loading applications...</p>
+                    </div>
+                </div>
+            </div>
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+        </div>
+    );
 
-                <main style={{ flex: 1, padding: "28px 32px", overflowY: "auto" }}>
-                    <div style={{ marginBottom: 24 }}>
-                        <h2 style={{ fontSize: 26, fontWeight: 800, color: "#0f172a", margin: "0 0 4px", letterSpacing: "-0.02em" }}>Applications</h2>
-                        <p style={{ color: "#94a3b8", margin: 0, fontSize: 14 }}>Manage volunteer applications for your opportunities</p>
+    return (
+        <div className="layout-wrapper">
+            <Sidebar />
+            <div className="main-container">
+                <Header 
+                    role="NGO" 
+                    profilePhoto={profilePhoto} 
+                    activePage="applications" 
+                />
+
+                <main className="content-inner">
+                    <div className="page-header" style={{ marginBottom: 24 }}>
+                        <h2 style={{ fontSize: 26, fontWeight: 800, color: "var(--text-main)", margin: "0 0 4px" }}>Applications</h2>
+                        <p style={{ color: "var(--text-muted)", margin: 0, fontSize: 14 }}>Manage volunteer applications for your opportunities.</p>
                     </div>
 
-                    {/* Search & Filter */}
-                    <div style={{
-                        background: "white", borderRadius: 12, padding: "16px 20px", marginBottom: 20,
-                        border: "1px solid #e2e8f0", display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap"
-                    }}>
-                        <div style={{ position: "relative", flex: 1, minWidth: 200 }}>
-                            <Search size={16} color="#9ca3af" style={{ position: "absolute", left: 10, top: 10 }} />
+                    <div className="applications-filter-bar">
+                        <div className="search-wrapper" style={{ position: "relative", flex: 1, minWidth: 200 }}>
+                            <Search size={16} color="var(--text-muted)" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)" }} />
                             <input
                                 type="text" placeholder="Search volunteers..."
                                 value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                                style={{ width: "100%", padding: "8px 8px 8px 32px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14 }}
+                                style={{ width: "100%", padding: "10px 10px 10px 38px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14 }}
                             />
                         </div>
-                        <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)}
-                            style={{ padding: "8px 12px", borderRadius: 8, border: "1px solid #e5e7eb", fontSize: 14, background: "white" }}>
-                            <option value="All">All Applications</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Accepted">Accepted</option>
-                            <option value="Rejected">Rejected</option>
-                        </select>
-                        <button onClick={() => { setSearchQuery(""); setStatusFilter("All"); }}
-                            style={{ padding: "8px 16px", borderRadius: 8, border: "1px solid #e5e7eb", background: "white", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", gap: 4, color: "#374151" }}>
-                            🔄 Reset
-                        </button>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                            <select 
+                                value={statusFilter} 
+                                onChange={e => setStatusFilter(e.target.value)}
+                                style={{ padding: "10px", borderRadius: 10, border: "1px solid var(--border-common)", fontSize: 14, background: "white" }}
+                            >
+                                <option value="All">All Statuses</option>
+                                <option value="Pending">Pending</option>
+                                <option value="Accepted">Accepted</option>
+                                <option value="Rejected">Rejected</option>
+                            </select>
+                            <button onClick={() => { setSearchQuery(""); setStatusFilter("All"); }} className="text-btn" style={{ whiteSpace: "nowrap" }}>
+                                <RotateCcw size={14} /> Reset
+                            </button>
+                        </div>
                     </div>
 
-                    {/* Status Tabs */}
-                    <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                    <div className="status-tabs">
                         {["All", "Pending", "Accepted", "Rejected"].map(tab => (
-                            <button key={tab} onClick={() => setStatusFilter(tab)} style={{
-                                padding: "6px 16px", borderRadius: 20, fontSize: 13, fontWeight: 500, cursor: "pointer",
-                                background: statusFilter === tab ? "#eff6ff" : "white",
-                                color: statusFilter === tab ? "#2563eb" : "#64748b",
-                                border: `1px solid ${statusFilter === tab ? "#bfdbfe" : "#e5e7eb"}`
-                            }}>{tab} ({counts[tab]})</button>
+                            <button 
+                                key={tab} 
+                                onClick={() => setStatusFilter(tab)}
+                                className={`status-tab ${statusFilter === tab ? "active" : ""}`}
+                            >
+                                {tab} ({counts[tab]})
+                            </button>
                         ))}
                     </div>
 
-                    {/* Applications List */}
-                    {loading ? (
-                        <div style={{ textAlign: "center", padding: 48 }}>
-                            <div style={{ width: 40, height: 40, border: "4px solid #e5e7eb", borderTopColor: "#2563eb", borderRadius: "50%", animation: "spin 0.8s linear infinite", margin: "0 auto 14px" }} />
-                            <p style={{ color: "#64748b", fontSize: 14 }}>Loading applications...</p>
-                            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-                        </div>
-                    ) : filtered.length === 0 ? (
-                        <div style={{
-                            background: "white", borderRadius: 16, border: "1px solid #e2e8f0", padding: "64px 32px",
-                            textAlign: "center", boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-                        }}>
-                            <div style={{
-                                width: 64, height: 64, borderRadius: 16, background: "linear-gradient(135deg, #faf5ff, #ede9fe)",
-                                display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 20px"
-                            }}>
-                                <Inbox size={28} color="#7c3aed" />
+                    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+                        {filtered.length === 0 ? (
+                            <div className="glass-card" style={{ textAlign: "center", padding: "64px 32px" }}>
+                                <Inbox size={48} color="#cbd5e1" style={{ marginBottom: 12 }} />
+                                <p style={{ color: "var(--text-muted)", fontSize: 16, fontWeight: 600 }}>No applications matched your filters.</p>
                             </div>
-                            <h3 style={{ fontSize: 20, fontWeight: 700, color: "#0f172a", margin: "0 0 8px" }}>No applications yet</h3>
-                            <p style={{ color: "#94a3b8", fontSize: 15, margin: "0 0 24px", maxWidth: 420, marginLeft: "auto", marginRight: "auto", lineHeight: 1.6 }}>
-                                When volunteers apply to your opportunities, their applications will appear here for you to review and manage.
-                            </p>
-                        </div>
-                    ) : (
-                        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                            {filtered.map(app => {
-                                const opp = opportunities[app.opportunity_id];
-                                const statusColors = {
-                                    pending: { bg: "#fef3c7", color: "#d97706" },
-                                    accepted: { bg: "#dcfce7", color: "#16a34a" },
-                                    rejected: { bg: "#fee2e2", color: "#dc2626" }
-                                };
-                                const sc = statusColors[app.status] || statusColors.pending;
+                        ) : (
+                            filtered.map(app => {
+                                const sc = app.status === "accepted" ? { bg: "var(--color-ngo-soft)", color: "var(--color-ngo)" } : 
+                                           app.status === "rejected" ? { bg: "#fee2e2", color: "#dc2626" } : 
+                                           { bg: "#fef3c7", color: "#d97706" };
                                 return (
-                                    <div key={app._id} style={{
-                                        background: "white", borderRadius: 12, padding: 24,
-                                        border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
-                                    }}>
-                                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+                                    <div key={app._id} className="glass-card" style={{ padding: 24 }}>
+                                        <div className="app-card-header">
                                             <div>
-                                                <h3 style={{ fontSize: 18, fontWeight: 600, color: "#1a1a1a", margin: "0 0 4px" }}>
-                                                    {app.opportunity_title || opp?.title || "Opportunity"}
+                                                <h3 style={{ fontSize: 18, fontWeight: 700, margin: "0 0 4px" }}>
+                                                    {app.opportunity_title || "SkillBridge Opportunity"}
                                                 </h3>
-                                                <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
-                                                    {app.volunteer_name || "Volunteer"} · Applied {app.applied_at ? new Date(app.applied_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""}
-                                                </p>
+                                                <div style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "var(--text-muted)" }}>
+                                                    <span style={{ fontWeight: 600, color: "var(--text-main)" }}>{app.volunteer_name || "Anonymous Volunteer"}</span>
+                                                    <span>&bull;</span>
+                                                    <span>Applied {app.applied_at ? new Date(app.applied_at).toLocaleDateString() : "Just now"}</span>
+                                                </div>
                                             </div>
                                             <span style={{
                                                 background: sc.bg, color: sc.color,
-                                                padding: "5px 14px", borderRadius: 20, fontSize: 13, fontWeight: 500,
+                                                padding: "5px 14px", borderRadius: 20, fontSize: 12, fontWeight: 700,
                                                 textTransform: "capitalize"
                                             }}>{app.status}</span>
                                         </div>
 
                                         {app.message && (
                                             <div style={{
-                                                background: "#f8fafc", borderLeft: "3px solid #2563eb", padding: "12px 16px",
-                                                borderRadius: "0 8px 8px 0", margin: "12px 0", fontSize: 14, color: "#4b5563", lineHeight: 1.6
+                                                background: "var(--background-soft)", borderLeft: "3px solid var(--color-ngo)",
+                                                padding: "16px", borderRadius: "0 10px 10px 0", margin: "16px 0", fontSize: 14, color: "#475569", lineHeight: 1.6
                                             }}>
-                                                {app.message}
+                                                &ldquo;{app.message}&rdquo;
                                             </div>
                                         )}
 
-                                        {opp?.required_skills && (
-                                            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 14 }}>
-                                                {opp.required_skills.map(skill => (
-                                                    <span key={skill} style={{
-                                                        background: "#eff6ff", color: "#2563eb", padding: "4px 10px",
-                                                        borderRadius: 16, fontSize: 12, border: "1px solid #bfdbfe"
-                                                    }}>{skill}</span>
-                                                ))}
-                                            </div>
-                                        )}
-
-                                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                                        <div className="app-actions">
                                             {app.status === "pending" && (
                                                 <>
-                                                    <button onClick={() => handleStatus(app._id, "accepted")} style={{
-                                                        padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
-                                                        background: "white", fontSize: 13, fontWeight: 500, cursor: "pointer",
-                                                        display: "flex", alignItems: "center", gap: 4, color: "#374151"
-                                                    }}><Check size={14} /> Accept</button>
-                                                    <button onClick={() => handleStatus(app._id, "rejected")} style={{
-                                                        padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
-                                                        background: "white", fontSize: 13, fontWeight: 500, cursor: "pointer",
-                                                        display: "flex", alignItems: "center", gap: 4, color: "#374151"
-                                                    }}><X size={14} /> Reject</button>
+                                                    <button onClick={() => handleStatus(app._id, "accepted")} className="action-btn-primary" style={{ background: "var(--color-ngo)" }}>
+                                                        <Check size={16} /> Accept
+                                                    </button>
+                                                    <button onClick={() => handleStatus(app._id, "rejected")} className="text-btn danger">
+                                                        <X size={16} /> Reject
+                                                    </button>
                                                 </>
                                             )}
-                                            {app.status === "accepted" ? (
-                                                <Link to={`/ngo-messages?user=${encodeURIComponent(app.volunteer_id)}`} style={{
-                                                    padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
-                                                    background: "white", fontSize: 13, fontWeight: 500, textDecoration: "none",
-                                                    display: "flex", alignItems: "center", gap: 4, color: "#374151"
-                                                }}><MessageSquare size={14} /> Message</Link>
-                                            ) : (
-                                                <span style={{
-                                                    padding: "6px 16px", borderRadius: 8, border: "1px solid #e5e7eb",
-                                                    background: "#f8fafc", fontSize: 13, fontWeight: 500,
-                                                    display: "flex", alignItems: "center", gap: 4, color: "#94a3b8"
-                                                }}><MessageSquare size={14} /> Message</span>
+                                            {app.status === "accepted" && (
+                                                <Link to="/ngo-messages" className="link-btn">
+                                                    <MessageSquare size={16} /> Contact Volunteer
+                                                </Link>
                                             )}
                                         </div>
                                     </div>
                                 );
-                            })}
-                        </div>
-                    )}
+                            })
+                        )}
+                    </div>
                 </main>
 
-                {/* Toast */}
                 {toast && (
                     <div style={{
                         position: "fixed", bottom: 24, right: 24, padding: "14px 24px", borderRadius: 10,
-                        background: toast.type === "error" ? "#fee2e2" : "#dcfce7",
-                        color: toast.type === "error" ? "#dc2626" : "#16a34a",
-                        fontWeight: 600, fontSize: 14, zIndex: 2000, boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                        background: toast.type === "error" ? "#fee2e2" : "var(--color-ngo-soft)",
+                        color: toast.type === "error" ? "#dc2626" : "var(--color-ngo)",
+                        fontWeight: 700, fontSize: 14, zIndex: 1000, boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
                     }}>{toast.msg}</div>
                 )}
             </div>

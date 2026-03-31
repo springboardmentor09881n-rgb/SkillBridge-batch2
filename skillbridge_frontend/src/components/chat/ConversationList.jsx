@@ -1,9 +1,6 @@
 const ConversationList = ({ threads, activeThreadId, loading, onSelect }) => {
     return (
         <div style={{ background: "white", borderRadius: 14, border: "1px solid #e2e8f0", overflow: "hidden" }}>
-            <div style={{ padding: "14px 16px", borderBottom: "1px solid #e2e8f0", fontWeight: 700, color: "#0f172a" }}>
-                Conversations
-            </div>
             {loading ? (
                 <div style={{ padding: 12, fontSize: 13, color: "#64748b" }}>Loading conversations...</div>
             ) : threads.length === 0 ? (

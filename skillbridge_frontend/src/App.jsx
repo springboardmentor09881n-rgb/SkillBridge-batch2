@@ -7,7 +7,6 @@ import ProfileNGO from "./components/ProfileNGO";
 import ProfileVolunteer from "./components/ProfileVolunteer";
 import Register from "./components/Register";
 
-import CreateNewOpportunity from "./pages/CreateNewopportunity";
 import CreateOpportunity from "./pages/CreateOpportunity";
 import EditOpportunity from "./pages/EditOpportunity";
 import EditProfileNGO from "./pages/EditProfileNGO";
@@ -22,7 +21,6 @@ import VolunteerApplications from "./pages/VolunteerApplications";
 import VolunteerDashboard from "./pages/VolunteerDashboard";
 import VolunteerMessages from "./pages/VolunteerMessages";
 import VolunteerOpportunities from "./pages/VolunteerOpportunities";
-import VolunteerMatchSuggestions from "./pages/VolunteerMatchSuggestions";
 
 
 const App = () => {
@@ -57,14 +55,6 @@ const App = () => {
           <Route
             path="/volunteer-messages"
             element={<ProtectedRoute allowedRoles={["Volunteer"]}><VolunteerMessages /></ProtectedRoute>}
-          />
-          <Route
-            path="/volunteer-matches"
-            element={
-              <ProtectedRoute allowedRoles={["Volunteer"]}>
-                <VolunteerMatchSuggestions />
-              </ProtectedRoute>
-            }
           />
           <Route
             path="/opportunity/:id"
@@ -104,7 +94,7 @@ const App = () => {
           {/* Protected Routes - CreateNewopportunity*/}
           <Route
             path="/create-new-opportunity"
-            element={<CreateNewOpportunity />}
+            element={<CreateOpportunity />}
           />
 
         </Routes>
