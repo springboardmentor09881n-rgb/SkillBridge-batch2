@@ -69,6 +69,21 @@ SkillBridge-batch2/
   - Notify affected volunteers
   - Clean stale opportunity notifications
 
+### Milestone 4: Real-Time Communication & Smart Matching
+
+- **WebSocket Chat System:** Implemented a bi-directional real-time messaging platform between Volunteers and NGOs.
+- **Message Persistence:** Full history retrieval and message storage in MongoDB.
+- **Smart Match Suggestions:** Developed an automated scoring algorithm to suggest the best opportunities to volunteers based on skill overlap and location.
+- **Chat Workspace:** Dedicated UI for managing multiple conversations with unread message indicators.
+
+### Milestone 5: UI/UX Standardization & Responsive Refinement
+
+- **Global Design System:** Consolidated all interactive elements into a unified CSS utility system (`.action-btn-primary`, `.text-btn`, etc.).
+- **Premium Visual Overhaul:** Overhauled Login, Register, and Dashboard pages with modern branding, glassmorphism, and high-fidelity typography.
+- **Mobile Experience Optimization:** Refined the entire application for mobile devices, including a responsive Chat Workspace and slide-out navigation.
+- **Advanced Discovery:** Upgraded the Opportunities filter to support multi-select skills and locations simultaneously.
+- **Smart Routing:** Integrated context-aware notification handling to lead users directly to specific matches or messages.
+
 ## Prerequisites
 
 - Python 3.10+
