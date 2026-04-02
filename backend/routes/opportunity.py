@@ -3,7 +3,7 @@ from database import opportunities_collection, notifications_collection, users_c
 from schemas.opportunity import OpportunityCreate, OpportunityUpdate
 from auth.dependencies import get_current_user
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
 
@@ -20,6 +20,34 @@ def _norm(text: str) -> str:
     return (text or "").strip().lower()
 
 
+def _serialize_date(dt):
+    if dt and hasattr(dt, "isoformat"):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat().replace("+00:00", "Z")
+    return dt
+
+
+async def _get_ngo_map(ngo_ids: set):
+    if not ngo_ids:
+        return {}
+    ngo_users = await users_collection.find(
+        {"email": {"$in": list(ngo_ids)}},
+        {"email": 1, "organization_name": 1, "name": 1, "full_name": 1, "username": 1},
+    ).to_list(length=len(ngo_ids) or 1)
+    return {ngo["email"]: ngo for ngo in ngo_users}
+
+
+def _get_ngo_name(ngo: dict, fallback: str = "NGO"):
+    return (
+        ngo.get("organization_name")
+        or ngo.get("name")
+        or ngo.get("full_name")
+        or ngo.get("username")
+        or fallback
+    )
+
+
 # CREATE OPPORTUNITY
 @router.post("/")
 async def create_opportunity(opportunity: OpportunityCreate, user: dict = Depends(get_current_user)):
@@ -28,7 +56,7 @@ async def create_opportunity(opportunity: OpportunityCreate, user: dict = Depend
 
     new_opportunity = opportunity.dict()
     new_opportunity["ngo_id"] = user["user_id"]
-    new_opportunity["created_at"] = datetime.utcnow()
+    new_opportunity["created_at"] = datetime.now(timezone.utc)
 
     result = await opportunities_collection.insert_one(new_opportunity)
 
@@ -46,7 +74,7 @@ async def create_opportunity(opportunity: OpportunityCreate, user: dict = Depend
             "user_id": v["email"],
             "role": "Volunteer",
             "read_by": [],
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         } for v in volunteers]
         await notifications_collection.insert_many(notifs)
 
@@ -64,6 +92,7 @@ async def get_ngo_opportunities(user: dict = Depends(get_current_user)):
 
     for opp in opportunities:
         opp["_id"] = str(opp["_id"])
+        opp["created_at"] = _serialize_date(opp.get("created_at"))
 
     return opportunities
 
@@ -99,8 +128,14 @@ async def get_all_opportunities(
     cursor = opportunities_collection.find(query)
     opportunities = await cursor.to_list(length=100)
 
+    ngo_ids = {opp.get("ngo_id") for opp in opportunities if opp.get("ngo_id")}
+    ngo_map = await _get_ngo_map(ngo_ids)
+
     for opp in opportunities:
         opp["_id"] = str(opp["_id"])
+        ngo = ngo_map.get(opp.get("ngo_id"), {})
+        opp["ngo_name"] = _get_ngo_name(ngo, opp.get("ngo_id", "NGO"))
+        opp["created_at"] = _serialize_date(opp.get("created_at"))
 
     return opportunities
 
@@ -138,14 +173,7 @@ async def get_matched_opportunities(user: dict = Depends(get_current_user)):
         ngo = ngo_map.get(opp.get("ngo_id"), {})
 
         opp["_id"] = str(opp["_id"])
-        opp["ngo_name"] = (
-            ngo.get("organization_name")
-            or ngo.get("name")
-            or ngo.get("full_name")
-            or ngo.get("username")
-            or opp.get("ngo_id")
-            or "NGO"
-        )
+        opp["ngo_name"] = _get_ngo_name(ngo, opp.get("ngo_id", "NGO"))
         opp["match_meta"] = {
             "skill_matches": skill_matches,
             "has_skill_match": has_skill_match,
@@ -276,6 +304,13 @@ async def get_opportunity_by_id(opportunity_id: str):
         raise HTTPException(status_code=404, detail="Opportunity not found")
 
     opp["_id"] = str(opp["_id"])
+    
+    # Enrich with NGO details
+    ngo_id = opp.get("ngo_id")
+    if ngo_id:
+        ngo_map = await _get_ngo_map({ngo_id})
+        ngo = ngo_map.get(ngo_id, {})
+        opp["ngo_name"] = _get_ngo_name(ngo, ngo_id)
 
     return opp
 
@@ -330,7 +365,7 @@ async def update_opportunity(
                 "user_id": v["email"],
                 "role": "Volunteer",
                 "read_by": [],
-                "created_at": datetime.utcnow()
+                "created_at": datetime.now(timezone.utc)
             } for v in volunteers]
             await notifications_collection.insert_many(notifs)
 
@@ -376,7 +411,7 @@ async def delete_opportunity(opportunity_id: str, user: dict = Depends(get_curre
             "user_id": vid,
             "role": "Volunteer",
             "read_by": [],
-            "created_at": datetime.utcnow()
+            "created_at": datetime.now(timezone.utc)
         } for vid in volunteer_ids]
         await notifications_collection.insert_many(notifs)
 

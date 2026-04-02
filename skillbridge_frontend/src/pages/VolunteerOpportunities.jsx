@@ -100,18 +100,46 @@ const VolunteerOpportunities = () => {
     };
 
     /* ── Filters & Formatting ── */
-    const allSkills = [...new Set(opportunities.flatMap(o => o.required_skills || []))].slice(0, 6);
-    const allLocations = [...new Set(opportunities.map(o => o.location).filter(Boolean))].slice(0, 6);
+    const getDistinctList = (list) => {
+        const seen = new Set();
+        return list
+            .map(s => (s || "").trim())
+            .filter(s => {
+                if (!s || seen.has(s.toLowerCase())) return false;
+                seen.add(s.toLowerCase());
+                return true;
+            });
+    };
+
+    const allSkills = getDistinctList(opportunities.flatMap(o => o.required_skills || [])).slice(0, 6);
+    const allLocations = getDistinctList(opportunities.map(o => o.location)).slice(0, 6);
 
     const filteredOpps = opportunities.filter(opp => {
         if (statusFilter === "Open" && opp.status !== "Open") return false;
         if (statusFilter === "Closed" && opp.status !== "Closed") return false;
         
-        if (selectedSkills.length > 0 && !selectedSkills.some(skill => (opp.required_skills || []).includes(skill))) return false;
-        if (selectedLocations.length > 0 && !selectedLocations.includes(opp.location)) return false;
+        const oppSkills = (opp.required_skills || []).map(s => s.toLowerCase().trim());
+        const oppLoc = (opp.location || "").toLowerCase().trim();
 
-        if (skillSearch && !(opp.required_skills || []).some(s => s.toLowerCase().includes(skillSearch.toLowerCase()))) return false;
-        if (locationSearch && !(opp.location || "").toLowerCase().includes(locationSearch.toLowerCase())) return false;
+        if (selectedSkills.length > 0) {
+            const selSkills = selectedSkills.map(s => s.toLowerCase().trim());
+            if (!selSkills.some(skill => oppSkills.some(os => os.includes(skill) || skill.includes(os)))) return false;
+        }
+
+        if (selectedLocations.length > 0) {
+            const selLocs = selectedLocations.map(s => s.toLowerCase().trim());
+            if (!selLocs.includes(oppLoc)) return false;
+        }
+
+        if (skillSearch) {
+            const sQuery = skillSearch.toLowerCase().trim();
+            if (!oppSkills.some(s => s.includes(sQuery))) return false;
+        }
+
+        if (locationSearch) {
+            const lQuery = locationSearch.toLowerCase().trim();
+            if (!oppLoc.includes(lQuery)) return false;
+        }
         return true;
     });
 

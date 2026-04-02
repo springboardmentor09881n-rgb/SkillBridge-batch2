@@ -90,12 +90,6 @@
 /* Responsive Overrides */
 @media (max-width: 1024px) {
   .main-header {
-    padding: 0 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .main-header {
     padding: 0 16px;
   }
   
@@ -104,10 +98,14 @@
   }
 
   .header-actions {
-    display: flex; /* We can show some actions if needed, or hide */
+    display: flex;
     margin-left: 0;
     padding-left: 0;
     border-left: none;
+  }
+
+  .role-badge {
+    display: none; /* Hide role badge on smaller screens to save space */
   }
 
   .mobile-menu-toggle {

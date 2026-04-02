@@ -2,6 +2,7 @@ import { useState } from "react";
 import "./Register.css";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 
 
 
@@ -72,6 +73,12 @@ const Register = () => {
   return (
     <div className="register-page-wrapper">
       <div className="register-card glass-card">
+        <Link to="/" className="back-to-home" style={{ 
+          position: "absolute", top: "24px", left: "24px", display: "flex", alignItems: "center", 
+          gap: "4px", fontSize: "14px", fontWeight: "600", color: "var(--text-muted)", textDecoration: "none" 
+        }}>
+          <ChevronLeft size={16} /> Back to Home
+        </Link>
         <div className="register-header">
           <h1 className="brand-logo" style={{ fontSize: "28px", marginBottom: "8px", justifyContent: "center" }}>SkillBridge</h1>
           <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-main)", margin: "0 0 4px" }}>Create An Account</h2>

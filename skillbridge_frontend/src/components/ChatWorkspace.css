@@ -8,15 +8,9 @@
 
 @media (max-width: 1024px) {
     .chat-layout {
-        grid-template-columns: 280px 1fr;
-        gap: 16px;
-    }
-}
-
-@media (max-width: 768px) {
-    .chat-layout {
         grid-template-columns: 1fr;
         height: calc(100vh - 160px);
+        gap: 0;
     }
     
     .chat-threads-sidebar:not(.mobile-active) {
@@ -25,6 +19,12 @@
     
     .chat-main-area:not(.mobile-active) {
         display: none !important;
+    }
+
+    .chat-card {
+        border-radius: 0;
+        border-left: none;
+        border-right: none;
     }
 }
 
@@ -56,7 +56,7 @@
     cursor: pointer;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .chat-back-btn {
         display: flex;
     }

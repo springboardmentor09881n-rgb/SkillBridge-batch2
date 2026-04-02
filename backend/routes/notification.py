@@ -2,9 +2,17 @@ from fastapi import APIRouter, Depends, HTTPException
 from database import notifications_collection
 from auth.dependencies import get_current_user
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
+
+
+def _serialize_date(dt):
+    if dt and hasattr(dt, "isoformat"):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat().replace("+00:00", "Z")
+    return dt
 
 
 @router.get("/unread-count")
@@ -40,6 +48,7 @@ async def get_notifications(user: dict = Depends(get_current_user)):
     for n in notifications:
         n["_id"] = str(n["_id"])
         n["is_read"] = user["user_id"] in n.get("read_by", [])
+        n["created_at"] = _serialize_date(n.get("created_at"))
     return notifications
 
 

@@ -86,7 +86,7 @@ const NotificationBell = () => {
     };
 
     const handleNotificationClick = async (notif) => {
-        // Mark as read
+        // Mark notification as read
         if (!notif.is_read) {
             try {
                 await apiFetch(`/notifications/${notif._id}/read`, { method: "PUT" });
@@ -96,6 +96,7 @@ const NotificationBell = () => {
                 console.error(e);
             }
         }
+
         // Navigate based on notification type
         setOpen(false);
         if (notif.type === "application_status") {
@@ -103,6 +104,11 @@ const NotificationBell = () => {
         } else if (notif.type === "new_application") {
             navigate("/ngo-applications");
         } else if (notif.type === "message") {
+            // Also mark the specific message conversation as read in the backend
+            const peerId = notif.from_user_id;
+            if (peerId) {
+                apiFetch(`/messages/read/${encodeURIComponent(peerId)}`, { method: "PUT" }).catch(() => {});
+            }
             const role = getStoredRole();
             navigate(role === "NGO" ? "/ngo-messages" : "/volunteer-messages");
         } else if (notif.type === "match_suggestion") {

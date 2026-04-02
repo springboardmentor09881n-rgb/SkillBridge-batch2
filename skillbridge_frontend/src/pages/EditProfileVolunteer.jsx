@@ -31,13 +31,18 @@ const EditProfileVolunteer = () => {
         const fetchProfile = async () => {
             try {
                 const data = await apiFetch("/dashboard/volunteer", { method: "GET" });
+                const rawSkills = data.skills || [];
+                const skillsArray = Array.isArray(rawSkills) 
+                    ? rawSkills 
+                    : String(rawSkills).split(",").map(s => s.trim()).filter(Boolean);
+
                 setFormData({
-                    name: data.name || "",
+                    name: data.name || data.full_name || "",
                     bio: data.bio || "",
                     location: data.location || "",
-                    skills: data.skills ? data.skills.join(", ") : ""
+                    skills: skillsArray.join(", ")
                 });
-                setSkillTags(data.skills || []);
+                setSkillTags(skillsArray);
                 if (data.photo_url) {
                     setPhotoUrl(`http://localhost:8000${data.photo_url}`);
                 }

@@ -189,7 +189,7 @@ const NGOApplications = () => {
                                                 </>
                                             )}
                                             {app.status === "accepted" && (
-                                                <Link to="/ngo-messages" className="link-btn">
+                                                <Link to={`/ngo-messages?user=${encodeURIComponent(app.volunteer_id || "")}`} className="link-btn">
                                                     <MessageSquare size={16} /> Contact Volunteer
                                                 </Link>
                                             )}

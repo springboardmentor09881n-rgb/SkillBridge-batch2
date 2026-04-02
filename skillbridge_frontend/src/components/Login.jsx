@@ -1,6 +1,7 @@
 import { useState, useContext } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { ChevronLeft } from "lucide-react";
 import "./Login.css";
 
 const Login = () => {
@@ -68,6 +69,12 @@ const Login = () => {
   return (
     <div className="login-page-wrapper">
       <div className="login-card glass-card">
+        <Link to="/" className="back-to-home" style={{ 
+          position: "absolute", top: "20px", left: "20px", display: "flex", alignItems: "center", 
+          gap: "4px", fontSize: "13px", fontWeight: "600", color: "var(--text-muted)", textDecoration: "none" 
+        }}>
+          <ChevronLeft size={16} /> Back to Home
+        </Link>
         <div className="login-header">
           <h1 className="brand-logo" style={{ fontSize: "28px", marginBottom: "8px", justifyContent: "center" }}>SkillBridge</h1>
           <h2 style={{ fontSize: "20px", fontWeight: "700", color: "var(--text-main)", margin: "0 0 4px" }}>Welcome Back</h2>

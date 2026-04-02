@@ -46,7 +46,7 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
 
     useEffect(() => {
         activeThreadIdRef.current = activeThreadId;
-        if (activeThreadId && window.innerWidth <= 768) {
+        if (activeThreadId && window.innerWidth <= 1024) {
             setActiveMobileView("chat");
         }
     }, [activeThreadId]);
@@ -123,7 +123,10 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
 
     useEffect(() => {
         fetchHistory(activeThreadId);
-    }, [activeThreadId, fetchHistory]);
+        if (activeThreadId) {
+            markConversationRead(activeThreadId);
+        }
+    }, [activeThreadId, fetchHistory, markConversationRead]);
 
     useEffect(() => {
         if (!user?.email || !user?.token) return;
@@ -194,7 +197,7 @@ const ChatWorkspace = ({ role = "volunteer", selectedUserId = "" }) => {
                         loading={loadingThreads}
                         onSelect={(id) => {
                             setActiveThreadId(id);
-                            if (window.innerWidth <= 768) setActiveMobileView("chat");
+                            if (window.innerWidth <= 1024) setActiveMobileView("chat");
                         }}
                     />
                 </div>

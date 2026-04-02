@@ -56,7 +56,7 @@ const LandingPage = () => {
                         </Link>
 
                         {/* Desktop Links */}
-                        <div className="hidden md:flex items-center space-x-10">
+                        <div className="hidden lg:flex items-center space-x-10">
                             {navLinks.map((link) => (
                                 <a
                                     key={link.name}
@@ -95,7 +95,7 @@ const LandingPage = () => {
                         </div>
 
                         {/* Mobile Menu Button */}
-                        <div className="md:hidden">
+                        <div className="lg:hidden">
                             <button 
                                 onClick={() => setIsMenuOpen(!isMenuOpen)} 
                                 className="p-2.5 bg-slate-100 rounded-xl text-slate-600 active:scale-90 transition-all"
@@ -113,7 +113,7 @@ const LandingPage = () => {
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -20 }}
-                            className="absolute top-full left-0 w-full bg-white border-b border-slate-200 p-6 md:hidden shadow-2xl"
+                            className="absolute top-full left-0 w-full bg-white border-b border-slate-200 p-6 lg:hidden shadow-2xl"
                         >
                             <div className="flex flex-col space-y-4">
                                 {navLinks.map((link) => (

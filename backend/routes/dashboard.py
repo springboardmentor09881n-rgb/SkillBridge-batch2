@@ -14,10 +14,17 @@ async def get_volunteer_dashboard(user: dict = Depends(get_current_user)):
     if not volunteer_data:
         raise HTTPException(status_code=404, detail="Volunteer not found")
         
+    # Handle skills being stored as a string (from registration) or an array
+    skills = volunteer_data.get("skills", [])
+    if isinstance(skills, str):
+        skills = [s.strip() for s in skills.split(",") if s.strip()]
+    elif not isinstance(skills, list):
+        skills = []
+
     return {
         "name": volunteer_data.get("name", volunteer_data.get("full_name", volunteer_data.get("username", ""))),
         "email": volunteer_data.get("email"),
-        "skills": volunteer_data.get("skills", []),
+        "skills": skills,
         "bio": volunteer_data.get("bio", ""),
         "location": volunteer_data.get("location", ""),
         "photo_url": volunteer_data.get("photo_url", "")

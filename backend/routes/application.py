@@ -3,9 +3,17 @@ from database import applications_collection, opportunities_collection, notifica
 from schemas.application import ApplicationCreate, ApplicationStatusUpdate
 from auth.dependencies import get_current_user
 from bson import ObjectId
-from datetime import datetime
+from datetime import datetime, timezone
 
 router = APIRouter()
+
+
+def _serialize_date(dt):
+    if dt and hasattr(dt, "isoformat"):
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat().replace("+00:00", "Z")
+    return dt
 
 
 # VOLUNTEER: Submit application
@@ -44,7 +52,7 @@ async def apply_to_opportunity(application: ApplicationCreate, user: dict = Depe
         "ngo_id": opp["ngo_id"],
         "message": application.message or "",
         "status": "pending",
-        "applied_at": datetime.utcnow()
+        "applied_at": datetime.now(timezone.utc)
     }
 
     result = await applications_collection.insert_one(new_app)
@@ -57,10 +65,20 @@ async def apply_to_opportunity(application: ApplicationCreate, user: dict = Depe
         "user_id": opp["ngo_id"],
         "role": "NGO",
         "read_by": [],
-        "created_at": datetime.utcnow()
+        "created_at": datetime.now(timezone.utc)
     })
 
     return {"message": "Application submitted successfully", "application_id": str(result.inserted_id)}
+
+
+def _get_ngo_name(ngo: dict, fallback: str = "NGO"):
+    return (
+        ngo.get("organization_name")
+        or ngo.get("name")
+        or ngo.get("full_name")
+        or ngo.get("username")
+        or fallback
+    )
 
 
 # VOLUNTEER: Get my applications
@@ -74,14 +92,25 @@ async def get_volunteer_applications(user: dict = Depends(get_current_user)):
 
     for app in apps:
         app["_id"] = str(app["_id"])
-        # Enrich with opportunity title
+        app["applied_at"] = _serialize_date(app.get("applied_at"))
+        # Enrich with opportunity and NGO details
         try:
             opp = await opportunities_collection.find_one({"_id": ObjectId(app["opportunity_id"])})
-            app["opportunity_title"] = opp.get("title", "Opportunity") if opp else "Deleted Opportunity"
-            app["opportunity_skills"] = opp.get("required_skills", []) if opp else []
+            if opp:
+                app["opportunity_title"] = opp.get("title", "Opportunity")
+                app["opportunity_skills"] = opp.get("required_skills", [])
+                
+                # Fetch NGO name
+                ngo_user = await users_collection.find_one({"email": opp["ngo_id"]})
+                app["ngo_name"] = _get_ngo_name(ngo_user, opp["ngo_id"]) if ngo_user else opp["ngo_id"]
+            else:
+                app["opportunity_title"] = "Deleted Opportunity"
+                app["opportunity_skills"] = []
+                app["ngo_name"] = "SkillBridge Partner"
         except Exception:
             app["opportunity_title"] = "Opportunity"
             app["opportunity_skills"] = []
+            app["ngo_name"] = "SkillBridge Partner"
 
     return apps
 

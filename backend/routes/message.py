@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Dict, List, Set
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket, WebSocketDisconnect, status
@@ -42,16 +42,22 @@ async def _is_chat_allowed(user_a: str, user_b: str) -> bool:
     return False
 
 
+def _serialize_date(dt):
+    if dt and hasattr(dt, "isoformat"):
+        # Ensure UTC suffix 'Z' if timestamp is naive (legacy) or UTC
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.isoformat().replace("+00:00", "Z")
+    return dt
+
+
 def _serialize_message(doc: dict) -> dict:
-    timestamp = doc.get("timestamp")
-    if hasattr(timestamp, "isoformat"):
-        timestamp = timestamp.isoformat()
     return {
         "_id": str(doc["_id"]),
         "sender_id": doc["sender_id"],
         "receiver_id": doc["receiver_id"],
         "content": doc["content"],
-        "timestamp": timestamp,
+        "timestamp": _serialize_date(doc.get("timestamp")),
     }
 
 
@@ -59,6 +65,11 @@ async def _mark_messages_as_read(receiver_id: str, sender_id: str) -> None:
     await messages_collection.update_many(
         {"sender_id": sender_id, "receiver_id": receiver_id, "is_read": False},
         {"$set": {"is_read": True}},
+    )
+    # Also find any associated notifications of type 'message' and mark them as read
+    await notifications_collection.update_many(
+        {"user_id": receiver_id, "from_user_id": sender_id, "type": "message"},
+        {"$addToSet": {"read_by": receiver_id}}
     )
 
 
@@ -177,14 +188,14 @@ async def get_conversations(user: dict = Depends(get_current_user)):
                 or peer_id,
                 "photo_url": peer.get("photo_url", ""),
                 "last_message": last_message.get("content") if last_message else "",
-                "last_message_at": last_message.get("timestamp") if last_message else None,
+                "last_message_at": _serialize_date(last_message.get("timestamp")) if last_message else None,
                 "unread_count": unread_count,
                 "chat_enabled": await _is_chat_allowed(me, peer_id),
             }
         )
 
     result.sort(
-        key=lambda item: item["last_message_at"] or datetime.min,
+        key=lambda item: item["last_message_at"] or "0001-01-01T00:00:00Z",
         reverse=True,
     )
     return result
@@ -290,7 +301,7 @@ async def websocket_chat_handler(websocket: WebSocket, user_id: str):
                 "sender_id": user_id,
                 "receiver_id": receiver_id,
                 "content": content,
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(timezone.utc),
                 "is_read": False,
             }
             result = await messages_collection.insert_one(new_message)
@@ -305,9 +316,10 @@ async def websocket_chat_handler(websocket: WebSocket, user_id: str):
                     "type": "message",
                     "message": "You received a new message",
                     "user_id": receiver_id,
+                    "from_user_id": user_id,
                     "role": None,
                     "read_by": [],
-                    "created_at": datetime.utcnow(),
+                    "created_at": datetime.now(timezone.utc),
                 }
             )
     except WebSocketDisconnect:
